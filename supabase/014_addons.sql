@@ -81,7 +81,7 @@ begin
   if member is not null then perform public.notify(member, 'goal', 'New add-on: ' || name, 'A bonus that unlocks once your chores are done.', jsonb_build_object('addon', new_id));
   else perform public.notify(m.id, 'goal', 'New add-on: ' || name, 'A bonus that unlocks once your chores are done.', jsonb_build_object('addon', new_id))
          from public.members m where m.family_id = fam and m.active and m.role <> 'caregiver'; end if;
-  perform public.log(fam, 'addon_added', jsonb_build_object('addon', id, 'value', value_cents, 'unlock', unlock));
+  perform public.log(fam, 'addon_added', jsonb_build_object('addon', new_id, 'value', value_cents, 'unlock', unlock));
   return new_id;
 end $$;
 
