@@ -1,0 +1,24 @@
+Settings for our family-chores Supabase project (sign-in links for parents). Please do exactly this and report back.
+
+RULES: change only the settings named here. Never show or share any key, password or token. Do not create users or delete anything.
+
+STEP 1: Authentication → URL Configuration
+- Site URL: https://lorneh12.github.io/family-chores/
+- Redirect URLs: add these two (keep any that are already there):
+    https://lorneh12.github.io/family-chores/
+    http://localhost:8080/
+- Save.
+
+STEP 2: Authentication → Sign In / Providers → Email
+- Email provider: ON
+- "Confirm email": leave as it is
+- Save if anything changed.
+
+STEP 3: Authentication → Rate Limits (if shown): leave the defaults. Just tell me the value for emails sent per hour.
+
+Report back:
+1. Site URL now set to:
+2. Redirect URLs listed:
+3. Email provider ON/OFF
+4. Emails-per-hour limit (if shown)
+Nothing else: no keys, no passwords.
