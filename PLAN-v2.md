@@ -75,3 +75,9 @@
 - Parents can take over a chore/shift: cash (parent earns), penalty (child penalised, default = job pay, undoable), demo (stays the child's, no money). Audited, visible on the family board.
 - Family scoreboard (positives only, everyone sees): jobs done, tasks done, money earned, points (sum of 1–5 task scores), rank with pole position; week / month / all time; rank by points (default), jobs or money; parents optional. Penalties, balances, payouts, low scores and photos stay private.
 - Live probe of kid-login (2026-11-12): unknown user → 401 "Wrong username or password" (proves the function reaches kid_auth with its built-in service access); empty → 400; GET → 405; CORS only names the GitHub Pages origin; anonymous sign-ins disabled; kid_auth and member_login denied to visitors. Not yet tested: a successful kid sign-in (needs a real family + a kid login; also confirms Supabase accepts the .invalid placeholder address).
+
+## Changes 2026-11-12 (evening)
+- Autopilot: the app runs rotation/shifts, re-balances, reassigns unclaimed jobs, AI-scores (work photos only), adjusts prices within per-job min/max, and logs every change (undoable). Each area: Off / Suggest / Auto (defaults: rotation auto, reassign auto, scoring suggest, pricing suggest, reminders auto). Runs nightly inside Supabase (pg_cron) so it works with the app closed. Engine = next slice; 007 adds settings, price limits and price history.
+- Roles by relation, not age: Parents and Children ("Children", never "Kids"); age group only decides chore suitability. Admin flag (family creator; only admins change admins).
+- Parent-to-parent tasks and events (PTA, car maintenance…) with money / gift / other rewards; visible to parents only (RLS); never on the scoreboard.
+- Scoreboard visibility: Everyone or Parents only, plus per-person allow/deny; parents always see; enforced in the database.

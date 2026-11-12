@@ -26,7 +26,7 @@ async function loadContext() {
 // ---------- signed-out screens ----------
 function signIn(tab = 'kid', msg = '') {
   app().innerHTML = `<div class="auth"><h1>Sign in</h1>
-<nav class="seg" aria-label="Who is signing in"><a href="#/signin/kid" class="${tab === 'kid' ? 'on' : ''}" ${tab === 'kid' ? 'aria-current="page"' : ''}>Kids</a><a href="#/signin/parent" class="${tab === 'parent' ? 'on' : ''}" ${tab === 'parent' ? 'aria-current="page"' : ''}>Parents</a></nav>
+<nav class="seg" aria-label="Who is signing in"><a href="#/signin/kid" class="${tab === 'kid' ? 'on' : ''}" ${tab === 'kid' ? 'aria-current="page"' : ''}>Children</a><a href="#/signin/parent" class="${tab === 'parent' ? 'on' : ''}" ${tab === 'parent' ? 'aria-current="page"' : ''}>Parents</a></nav>
 ${tab === 'kid' ? `<form id="kf" class="form card">
 <label>Username <input name="u" autocomplete="username" autocapitalize="none" required maxlength="20"></label>
 <label>Password <input name="p" type="password" autocomplete="current-password" required maxlength="40"></label>
@@ -72,7 +72,7 @@ V.home = async () => {
 <p class="muted">${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}${bal !== null ? ` · balance <b>${money(bal)}</b>` : ''}</p>
 ${pole ? `<a class="card notice" href="#/board">🏆 Pole position this week: ${E(pole.emoji)} ${E(pole.display_name)} · ${pole.points} points</a>` : ''}
 <div class="card"><h2>Your chores</h2><p class="muted">${isParent() ? 'Add jobs, tasks and the rubric in Setup → Jobs (coming next). Then each person sees their chores here.' : 'Your chores will show here once a parent adds the jobs.'}</p></div>
-${isParent() && ctx.members.some(m => m.role === 'child' && !m.username) ? `<a class="card notice" href="#/setup">Set up logins for the kids in Setup → People</a>` : ''}`);
+${isParent() && ctx.members.some(m => m.role === 'child' && !m.username) ? `<a class="card notice" href="#/setup">Set up logins for the children in Setup → People</a>` : ''}`);
 };
 
 V.board = async (period = 'week') => {
@@ -118,7 +118,7 @@ V.setup = async () => {
 <label class="chk"><input type="checkbox" name="bp" ${st.board_parents ? 'checked' : ''}> Show parents on the scoreboard</label>
 <label class="chk"><input type="checkbox" name="as" ${st.approve_swaps ? 'checked' : ''}> A parent approves swaps</label>
 <label>Week starts <select name="ws">${o(0, st.week_start, 'Sunday')}${o(1, st.week_start, 'Monday')}</select></label>
-<label>Kids on shared devices: sign out after (minutes idle) <input name="idle" type="number" min="5" max="240" value="${st.kid_idle_minutes}"></label>
+<label>Children on shared devices: sign out after (minutes idle) <input name="idle" type="number" min="5" max="240" value="${st.kid_idle_minutes}"></label>
 <label>Currency <select name="cur">${['USD', 'CAD', 'GBP', 'EUR', 'AUD'].map(c => o(c, st.currency, c)).join('')}</select></label>
 <button class="btn">Save</button> <span id="smsg" role="status"></span></form></details>
 <p><a href="#/about">About, privacy &amp; usage</a></p>`);
@@ -163,7 +163,7 @@ ${id !== 'new' && m.role === 'parent' && !m.user_id ? `<h3>Invite</h3><p class="
 V.about = async () => {
   const rows = Object.entries(PWA.state.usage).sort((a, b) => b[1].minutes - a[1].minutes);
   frame(`<h1>About &amp; privacy</h1>
-<div class="card"><h2>Privacy</h2><p>Your family's data lives in a private database that only signed-in family members can reach. Kids can't see each other's money details, scores or photos. Only first names, emoji and age groups are stored about people; kids have no email. Proof photos are private (you and parents only). No ads, no tracking, no cookies.</p></div>
+<div class="card"><h2>Privacy</h2><p>Your family's data lives in a private database that only signed-in family members can reach. Children can't see each other's money details, scores or photos. Only first names, emoji and age groups are stored about people; children have no email. Proof photos are private (you and parents only). No ads, no tracking, no cookies.</p></div>
 <div class="card"><h2>Use it as an app</h2><p class="muted">${PWA.mode === 'app' ? 'You are in the app.' : 'Install app (Chrome/Edge, laptop or Android) or Safari → Share → Add to Home Screen.'}</p></div>
 <div class="card"><h2>Where it's used</h2>${rows.map(([w, u]) => `<p><b>${E(w)}${w === PWA.where ? ' (here)' : ''}</b>: ${u.visits} visit${u.visits === 1 ? '' : 's'} · ${Math.round(u.minutes)} min</p>`).join('')}
 <button class="btn alt" id="rep">Copy usage report</button></div>`);
