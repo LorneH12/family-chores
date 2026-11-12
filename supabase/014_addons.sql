@@ -1,0 +1,258 @@
+-- Family Chores 014: add-ons — things people do beyond chores (study, practise driving, eat dinner together, drink water…).
+-- • Anyone can add their own add-ons (just for them, no money). Parents/admins can still reward any logged add-on.
+-- • Parents/admins (or the app's autopilot) can add add-ons WITH a value, for one person or everyone.
+-- • A valued add-on's bonus is HELD and only appears once that person's chores are done (and any achievement is met):
+--     unlock = 'chores'    → released when the person has had a chore scored today and has no chore in progress
+--     unlock = 'scheduled' → released at unlock_at (and chores done)
+--     unlock = 'now'       → pushed out: released straight away
+-- • Every log is visible to the person and to parents/admins. Run after 001–013. Safe to re-run. Ends with tests.
+
+create table if not exists public.addons (
+  id uuid primary key default gen_random_uuid(),
+  family_id uuid not null references public.families(id) on delete cascade,
+  member_id uuid references public.members(id) on delete cascade,           -- null = everyone in the family
+  name text not null check (char_length(name) between 1 and 60),
+  emoji text not null default '⭐' check (char_length(emoji) <= 8),
+  source text not null check (source in ('self','parent','app')),
+  value_cents integer not null default 0 check (value_cents between 0 and 10000),
+  per_day smallint not null default 1 check (per_day between 1 and 10),
+  unlock text not null default 'chores' check (unlock in ('chores','scheduled','now')),
+  unlock_at timestamptz,
+  min_chores smallint not null default 1 check (min_chores between 0 and 20),  -- the "achievement": chores scored today
+  active boolean not null default true,
+  created_by uuid references public.members(id) on delete set null,
+  created_at timestamptz not null default now(),
+  constraint addons_self_unpaid check (source <> 'self' or value_cents = 0),
+  constraint addons_sched check (unlock <> 'scheduled' or unlock_at is not null)
+);
+create index if not exists addons_family on public.addons(family_id);
+
+create table if not exists public.addon_logs (
+  id uuid primary key default gen_random_uuid(),
+  addon_id uuid not null references public.addons(id) on delete cascade,
+  family_id uuid not null references public.families(id) on delete cascade,
+  member_id uuid not null references public.members(id) on delete cascade,
+  done_on date not null default current_date,
+  note text check (char_length(note) <= 200),
+  status text not null default 'logged' check (status in ('logged','held','released')),
+  reward_cents integer not null default 0 check (reward_cents between 0 and 10000),
+  rewarded_by uuid references public.members(id) on delete set null,
+  created_at timestamptz not null default now(),
+  released_at timestamptz
+);
+create index if not exists addon_logs_member on public.addon_logs(member_id, done_on desc);
+alter table public.bonuses add column if not exists addon_log uuid references public.addon_logs(id) on delete set null;
+
+alter table public.addons enable row level security;
+alter table public.addon_logs enable row level security;
+revoke all on public.addons, public.addon_logs from anon, authenticated;
+grant select on public.addons, public.addon_logs to authenticated;
+drop policy if exists ao_read on public.addons;
+create policy ao_read on public.addons for select to authenticated
+  using (public.is_parent_of(family_id) or member_id = public.my_member() or (member_id is null and public.is_member_of(family_id)));
+drop policy if exists al_read on public.addon_logs;
+create policy al_read on public.addon_logs for select to authenticated using (member_id = public.my_member() or public.is_parent_of(family_id));
+
+-- ---------- create ----------
+-- Your own add-on (no money; parents can still reward it).
+create or replace function public.add_my_addon(name text, emoji text default '⭐', per_day integer default 1) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.my_member(); fam uuid := public.my_family(); new_id uuid;
+begin
+  if me is null then raise exception 'Not signed in'; end if;
+  if (select count(*) from public.addons a where a.member_id = me and a.source = 'self' and a.active) >= 30 then raise exception 'You have 30 add-ons already: retire one first'; end if;
+  insert into public.addons(family_id, member_id, name, emoji, source, per_day, unlock, min_chores, created_by)
+    values (fam, me, name, coalesce(emoji, '⭐'), 'self', per_day, 'now', 0, me) returning addons.id into new_id;
+  perform public.notify_parents(fam, 'progress', (select display_name from public.members where members.id = me) || ' added an add-on: ' || name, null, jsonb_build_object('addon', new_id));
+  return new_id;
+end $$;
+
+-- Parent/admin add-on with a value, for one person (member) or everyone (null). unlock: chores | scheduled | now.
+create or replace function public.add_family_addon(name text, value_cents integer, member uuid default null, unlock text default 'chores',
+  unlock_at timestamptz default null, min_chores integer default 1, emoji text default '⭐', per_day integer default 1, by_app boolean default false) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare fam uuid := public.my_family(); me uuid := public.my_member(); new_id uuid;
+begin
+  if fam is null or not public.is_parent_of(fam) then raise exception 'Only a parent or admin can add valued add-ons'; end if;
+  if member is not null and not exists (select 1 from public.members m where m.id = member and m.family_id = fam) then raise exception 'Not in this family'; end if;
+  insert into public.addons(family_id, member_id, name, emoji, source, value_cents, per_day, unlock, unlock_at, min_chores, created_by)
+    values (fam, member, name, coalesce(emoji, '⭐'), case when by_app then 'app' else 'parent' end, value_cents, per_day, unlock, unlock_at, min_chores, me)
+    returning addons.id into new_id;
+  if member is not null then perform public.notify(member, 'goal', 'New add-on: ' || name, 'A bonus that unlocks once your chores are done.', jsonb_build_object('addon', new_id));
+  else perform public.notify(m.id, 'goal', 'New add-on: ' || name, 'A bonus that unlocks once your chores are done.', jsonb_build_object('addon', new_id))
+         from public.members m where m.family_id = fam and m.active and m.role <> 'caregiver'; end if;
+  perform public.log(fam, 'addon_added', jsonb_build_object('addon', id, 'value', value_cents, 'unlock', unlock));
+  return new_id;
+end $$;
+
+-- Push an add-on's held bonuses out now (or switch it to "now" from here on).
+create or replace function public.push_addon(addon uuid) returns integer
+language plpgsql security definer set search_path = '' as $$
+declare a public.addons; n int := 0; m uuid;
+begin
+  select * into a from public.addons where id = addon;
+  if a.id is null or not public.is_parent_of(a.family_id) then raise exception 'Only a parent or admin can push this'; end if;
+  update public.addons set unlock = 'now' where id = addon;
+  for m in select distinct member_id from public.addon_logs where addon_id = addon and status = 'held' loop n := n + public.release_addons(m); end loop;
+  return n;
+end $$;
+
+-- ---------- log + release ----------
+create or replace function public.chores_done_today(member uuid) returns integer
+language sql stable security definer set search_path = '' as $$
+  select count(*)::int from public.scores s join public.submissions b on b.id = s.submission_id
+   where s.member_id = member and b.completed_on = current_date $$;
+
+-- Release anything this person has earned: valued, held, unlock condition met. Returns the number released.
+create or replace function public.release_addons(member uuid) returns integer
+language plpgsql security definer set search_path = '' as $$
+declare r record; n int := 0; busy boolean := exists (select 1 from public.activity where member_id = member and job_id is not null);
+  done int := public.chores_done_today(member);
+begin
+  for r in select l.id, l.family_id, a.name, a.value_cents, a.unlock, a.unlock_at, a.min_chores from public.addon_logs l join public.addons a on a.id = l.addon_id
+           where l.member_id = member and l.status = 'held' loop
+    if r.unlock = 'now' or ((r.unlock = 'chores' or (r.unlock = 'scheduled' and r.unlock_at <= now())) and not busy and done >= r.min_chores) then
+      insert into public.bonuses(family_id, member_id, amount_cents, reason, addon_log) values (r.family_id, member, r.value_cents, left('Add-on: ' || r.name, 120), r.id);
+      update public.addon_logs set status = 'released', reward_cents = r.value_cents, released_at = now() where id = r.id;
+      perform public.notify(member, 'progress', 'Bonus unlocked: ' || r.name, '$' || to_char(r.value_cents / 100.0, 'FM990.00') || ' added.', jsonb_build_object('addon_log', r.id, 'intent', 'celebrate'));
+      n := n + 1;
+    end if;
+  end loop;
+  return n;
+end $$;
+
+-- "I did it": log an add-on. Valued ones are held until chores are done; own ones are just logged (and shared with parents).
+create or replace function public.log_addon(addon uuid, note text default null) returns text
+language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.my_member(); a public.addons; today int; lid uuid;
+begin
+  select * into a from public.addons where id = addon and active;
+  if me is null or a.id is null or a.family_id <> public.my_family() or (a.member_id is not null and a.member_id <> me) then raise exception 'Add-on not found'; end if;
+  select count(*) into today from public.addon_logs where addon_id = addon and member_id = me and done_on = current_date;
+  if today >= a.per_day then raise exception 'Already logged % today', a.per_day; end if;
+  insert into public.addon_logs(addon_id, family_id, member_id, note, status)
+    values (addon, a.family_id, me, note, case when a.value_cents > 0 then 'held' else 'logged' end) returning id into lid;
+  if a.source = 'self' then
+    perform public.notify_parents(a.family_id, 'progress', (select display_name from public.members where id = me) || ': ' || a.name, note, jsonb_build_object('addon_log', lid));
+  end if;
+  if a.value_cents > 0 and public.release_addons(me) = 0 then return 'held'; end if;
+  return case when a.value_cents > 0 then 'released' else 'logged' end;
+end $$;
+
+-- Parent/admin rewards any logged add-on (including someone's own) with an amount they choose.
+create or replace function public.reward_addon(log uuid, cents integer, why text default null) returns void
+language plpgsql security definer set search_path = '' as $$
+declare l public.addon_logs; nm text;
+begin
+  select * into l from public.addon_logs where id = log;
+  if l.id is null or not public.is_parent_of(l.family_id) then raise exception 'Only a parent or admin can reward'; end if;
+  if l.status <> 'logged' then raise exception 'This one already has a bonus'; end if;
+  if cents < 1 or cents > 10000 then raise exception 'Pick $0.01 to $100'; end if;
+  select name into nm from public.addons where id = l.addon_id;
+  insert into public.bonuses(family_id, member_id, amount_cents, reason, addon_log) values (l.family_id, l.member_id, cents, left(coalesce(why, 'Add-on: ' || nm), 120), log);
+  update public.addon_logs set status = 'released', reward_cents = cents, rewarded_by = public.my_member(), released_at = now() where id = log;
+  perform public.notify(l.member_id, 'progress', 'Bonus for ' || nm, coalesce(why, '$' || to_char(cents / 100.0, 'FM990.00') || ' added.'), jsonb_build_object('addon_log', log, 'intent', 'celebrate'));
+end $$;
+
+-- Retire an add-on (owner for their own; parents for any).
+create or replace function public.retire_addon(addon uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare a public.addons;
+begin
+  select * into a from public.addons where id = addon;
+  if a.id is null or not (public.is_parent_of(a.family_id) or (a.source = 'self' and a.member_id = public.my_member())) then raise exception 'Not yours to retire'; end if;
+  update public.addons set active = false where id = addon;
+end $$;
+
+-- release when a chore is scored (after 013's colour trigger clears the current task)
+create or replace function public.on_scored_release() returns trigger language plpgsql security definer set search_path = '' as $$
+begin perform public.release_addons(new.member_id); return new; end $$;
+drop trigger if exists scores_zrelease on public.scores;   -- "z" so it fires after scores_colour
+create trigger scores_zrelease after insert or update on public.scores for each row execute function public.on_scored_release();
+
+-- scheduled unlocks: sweep every 15 minutes
+create or replace function public.release_due_addons() returns integer
+language plpgsql security definer set search_path = '' as $$
+declare m uuid; n int := 0;
+begin for m in select distinct member_id from public.addon_logs where status = 'held' loop n := n + public.release_addons(m); end loop; return n; end $$;
+
+revoke all on function public.add_my_addon(text,text,integer), public.add_family_addon(text,integer,uuid,text,timestamptz,integer,text,integer,boolean),
+  public.push_addon(uuid), public.log_addon(uuid,text), public.reward_addon(uuid,integer,text), public.retire_addon(uuid) from public, anon;
+grant execute on function public.add_my_addon(text,text,integer), public.add_family_addon(text,integer,uuid,text,timestamptz,integer,text,integer,boolean),
+  public.push_addon(uuid), public.log_addon(uuid,text), public.reward_addon(uuid,integer,text), public.retire_addon(uuid) to authenticated;
+revoke all on function public.release_addons(uuid), public.release_due_addons(), public.chores_done_today(uuid) from public, anon, authenticated;
+
+do $$ begin
+  perform cron.unschedule(jobid) from cron.job where jobname = 'fc-release-addons';
+  perform cron.schedule('fc-release-addons', '*/15 * * * *', 'select public.release_due_addons()');
+  raise notice 'add-on unlocks scheduled every 15 minutes';
+exception when others then raise notice 'pg_cron not available (%): enable it under Database → Extensions, then re-run this block', sqlerrm;
+end $$;
+
+-- ---------- tests ----------
+do $test$
+declare fa uuid := gen_random_uuid(); pa uuid := gen_random_uuid(); c1 uuid := gen_random_uuid(); c2 uuid := gen_random_uuid();
+  u_pa uuid := gen_random_uuid(); u_c1 uuid := gen_random_uuid(); u_c2 uuid := gen_random_uuid();
+  r uuid := gen_random_uuid(); j1 uuid := gen_random_uuid(); t1 uuid := gen_random_uuid(); s1 uuid := gen_random_uuid();
+  mine uuid; water uuid; sched uuid; lg uuid; res text; n int; b int; ok boolean; passed int := 0;
+begin
+  insert into public.families(id, name) values (fa, 'TEST family A');
+  insert into public.settings(family_id) values (fa);
+  insert into public.pay_scale(family_id, score, percent) values (fa,5,100),(fa,4,90),(fa,3,75),(fa,2,50),(fa,1,0);
+  insert into public.members(id, family_id, user_id, display_name, role, age_group, is_admin) values
+    (pa, fa, u_pa, 'TestAdminA', 'parent', 'adult', true), (c1, fa, u_c1, 'TestChildA', 'child', 'teen', false), (c2, fa, u_c2, 'TestChildB', 'child', 'kid', false);
+  insert into public.rooms(id, family_id, name) values (r, fa, 'Test room A');
+  insert into public.jobs(id, family_id, room_id, name, pay_cents) values (j1, fa, r, 'Test dishes', 300);
+  insert into public.tasks(id, job_id, family_id, name) values (t1, j1, fa, 'Test task');
+
+  -- child adds their own add-on: no money, can't set a value
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  mine := public.add_my_addon('Study 30 min', '📚');
+  res := public.log_addon(mine, 'chapter 4'); if res <> 'logged' then raise exception 'FAIL: own add-on %', res; end if; passed := passed + 1;
+  ok := false; begin perform public.log_addon(mine); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: logged past the daily limit'; end if; passed := passed + 1;
+  ok := false; begin perform public.add_family_addon('Free money', 500); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child created a valued add-on'; end if; passed := passed + 1;
+  ok := false; begin insert into public.addons(family_id, member_id, name, source, value_cents) values (fa, c1, 'x', 'self', 100); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child wrote add-ons directly'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  -- parent: valued add-on for everyone (held until chores), one scheduled for later
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pa, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  water := public.add_family_addon('Drink 6 glasses of water', 50, null, 'chores', null, 1, '💧');
+  sched := public.add_family_addon('Practise driving', 200, c1, 'scheduled', now() + interval '2 hours', 0, '🚗');
+  select count(*) into n from public.addon_logs where member_id = c1; if n <> 1 then raise exception 'FAIL: parent cannot see the child''s own add-on log'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  res := public.log_addon(water); if res <> 'held' then raise exception 'FAIL: bonus showed before chores were done (%)', res; end if; passed := passed + 1;
+  b := public.balance(c1); if b <> 0 then raise exception 'FAIL: held bonus counted in balance (%)', b; end if; passed := passed + 1;
+  res := public.log_addon(sched); if res <> 'held' then raise exception 'FAIL: scheduled bonus released early'; end if; passed := passed + 1;
+  perform public.start_task(j1, 20);
+  insert into public.submissions(id, family_id, job_id, member_id, occ, after_path) values (s1, fa, j1, c1, current_date, fa || '/' || c1 || '/x/after.jpg');
+  execute 'reset role';
+
+  -- sibling can't see c1's add-on logs
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c2, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  select count(*) into n from public.addon_logs where member_id = c1; if n <> 0 then raise exception 'FAIL: a sibling sees add-on logs'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  -- chore scored → water bonus unlocks; driving still waits for its time
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pa, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  perform public.approve_scores(s1, jsonb_build_object(t1::text, 5));
+  select count(*) into n from public.addon_logs l join public.addons a on a.id = l.addon_id where l.member_id = c1 and a.id = water and l.status = 'released';
+  if n <> 1 then raise exception 'FAIL: chores done but bonus still held'; end if; passed := passed + 1;
+  select count(*) into n from public.addon_logs where addon_id = sched and status = 'held'; if n <> 1 then raise exception 'FAIL: scheduled bonus released before its time'; end if; passed := passed + 1;
+  n := public.push_addon(sched); if n <> 1 then raise exception 'FAIL: push did not release'; end if; passed := passed + 1;
+  select id into lg from public.addon_logs where addon_id = mine;
+  perform public.reward_addon(lg, 100, 'Great studying');
+  b := public.balance(c1); if b <> 300 + 50 + 200 + 100 then raise exception 'FAIL: balance % (want 650)', b; end if; passed := passed + 1;
+  ok := false; begin perform public.reward_addon(lg, 100); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: rewarded the same log twice'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  delete from public.families where id = fa;
+  raise notice 'ALL % ADD-ON TESTS PASSED', passed;
+end $test$;
+
+select 'Add-ons installed (own, parent/app-valued, held until chores are done, scheduled or pushed, parent rewards); ALL TESTS PASSED (test data removed)' as result;

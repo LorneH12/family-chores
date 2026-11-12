@@ -49,6 +49,20 @@
     highfive: ['high five, {name}', 'teamwork, {name}', 'we did that, {name}', 'up top, {name}'],
     greet: ['coming through, {name}', 'after you, {name}', 'nice moves, {name}', 'teamwork, {name}', 'looking sharp, {name}'],
     teamwork: ['dream team', 'that combo', 'you and me', 'tag team'],
+    poked: ['hey, that tickles', 'boop received', 'who poked me', 'hehe, again', 'ow… just kidding'],
+    bumped: ['oops, sorry {name}', 'whoa, watch it', 'excuse me, {name}', 'bumper cars'],
+    grabbed: ['whoa, put me down', 'I\'m flying', 'up up and away', 'easy, easy'],
+    dropped: ['I\'m okay', 'nailed the landing', 'ten out of ten landing', 'back on my feet'],
+    shaken: ['earthquake', 'the room is wobbling', 'whoa, what was that', 'shaken, not stirred'],
+    wakeup: ['good morning', 'five more minutes… okay, up', 'rise and shine', 'new day, let\'s go'],
+    partial: ['{chore} counts, next time go for five', '{chore}: good start, more shine next time', 'progress on {chore}, you know where the five-star spots are', '{chore} is in, the next one gets the gold'],
+    bedtime: ['all done, bedtime', 'chores finished, time to rest', 'that was a full day, lights out', 'earned this sleep'],
+    headout: ['chores done, heading out for a bit', 'all finished, going out, back later', 'done for now, see you in a while', 'free time, out the door'],
+    home: ["I'm back", 'home again', 'back from my break', 'back, feeling fresh'],
+    addon: ['{chore}, logged', 'did {chore} too', '{chore} on top of the chores', 'extra one: {chore}'],
+    held: ['{chore} bonus is waiting for the chores to finish', '{chore} is saved, it unlocks after the chores', 'bonus for {chore} unlocks when the chores are done'],
+    unlocked: ['bonus unlocked: {chore}', '{chore} bonus is mine', 'chores done, so {chore} paid off', 'unlocked the {chore} bonus'],
+    tired: ['still on {chore}… running low', '{chore} is taking a while', 'need a little energy for {chore}', 'so close on {chore}'],
   };
   const FALLBACK = { nudge: 'your next chore is ready when you are', start: 'here we go', progress: "you're making progress", praise: 'that was great work', streak: "you're on a roll",
     recover: 'fresh start today', overload: "that's a big week you picked", checkpoint: 'checkpoint coming up', celebrate: 'goal reached', working: 'working on it', greet: 'hey, teammate', teamwork: 'dream team' };
@@ -73,7 +87,7 @@
       const opener = !arm.startsWith('short') || (!opts.short && r() < 0.3);
       if (opener) parts.push(pick(p.open, r) + (hype ? '!' : ','));
       parts.push((opener && !hype ? core : cap(core)) + (/[?!.]$/.test(core) ? '' : arm === 'question' && intent === 'nudge' ? '?' : hype ? '!' : '.'));
-      if (arm.startsWith('long')) { if (arm === 'long-funny') parts.push(o && r() < 0.6 ? pick(o.bit, r) : pick(p.quirk, r)); parts.push(pick(p.close, r)); }
+      if (arm.startsWith('long')) { if (arm === 'long-funny' && intent !== 'partial' && intent !== 'tired') parts.push(o && r() < 0.6 ? pick(o.bit, r) : pick(p.quirk, r)); parts.push(pick(p.close, r)); }
       if (intent === 'overload' && ctx.options && ctx.options.length) parts.push('Your call: ' + ctx.options.slice(0, 3).map((x, i) => `(${i + 1}) ${x}`).join(' '));
       if (opts.short && o && r() < 0.35) parts.push(pick(o.bit, r));
       if (arm === 'emoji-heavy') { const e1 = pick(p.emoji, r); parts.push(e1 + pick(p.emoji.filter(e => e !== e1), r)); } else if (r() < 0.5) parts.push(pick(p.emoji, r));

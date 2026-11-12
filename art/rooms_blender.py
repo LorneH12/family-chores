@@ -26,12 +26,16 @@ def mat(name):
     MATS[name] = m; return m
 
 ROOT = None
+TAG = None
+def tag(name):
+    global TAG; TAG = name
 def obj_common(o, color, bevel=0.06):
     o.data.materials.append(mat(color))
     if bevel:
         mod = o.modifiers.new("bevel", "BEVEL"); mod.width = bevel; mod.segments = 3; mod.limit_method = "ANGLE"
     for p in o.data.polygons: p.use_smooth = True
     o.parent = ROOT
+    if TAG: o["item"] = TAG
     return o
 
 def box(size, loc, color, bevel=0.06, rot=(0, 0, 0)):
@@ -47,8 +51,8 @@ def ball(r, loc, color):
     bpy.ops.mesh.primitive_uv_sphere_add(radius=r, location=loc, segments=24, ring_count=12)
     return obj_common(bpy.context.object, color, 0)
 
-def shell(floor="floor", wall="wall", w=4.0, d=4.0, h=2.6, walls=True):
-    box((w, d, 0.25), (0, 0, -0.125), floor, 0.08)
+def shell(floor="floor", wall="wall", w=4.0, d=4.0, h=2.6, walls=True, floor_tag="floor"):
+    tag(floor_tag); box((w, d, 0.25), (0, 0, -0.125), floor, 0.08); tag(None)
     if walls:
         box((w, 0.2, h), (0, d / 2 - 0.1, h / 2), wall, 0.05)          # back wall
         box((0.2, d, h), (-w / 2 + 0.1, 0, h / 2), wall, 0.05)         # left wall
@@ -56,15 +60,15 @@ def shell(floor="floor", wall="wall", w=4.0, d=4.0, h=2.6, walls=True):
 # ---------- rooms ----------
 def kitchen():
     shell(wall="wall2")
-    box((3.2, 0.8, 1.0), (0.1, 1.45, 0.5), "white")                 # counter run
-    box((3.3, 0.9, 0.08), (0.1, 1.45, 1.04), "wood")                # worktop
-    box((0.8, 0.8, 2.1), (-1.45, 1.45, 1.05), "steel")              # fridge
-    box((0.7, 0.5, 0.06), (0.2, 1.45, 1.1), "steel", 0.02)          # sink
-    for x in (0.9, 1.25): cyl(0.13, 0.03, (x, 1.35, 1.1), "dark")   # hob rings
-    box((0.8, 1.6, 0.9), (-0.9, -0.9, 0.45), "wood")                # island (front-left, clear of the sink)
-    box((0.9, 1.7, 0.07), (-0.9, -0.9, 0.93), "white")
+    tag("counter"); box((3.2, 0.8, 1.0), (0.1, 1.45, 0.5), "white"); box((3.3, 0.9, 0.08), (0.1, 1.45, 1.04), "wood")   # counter run + worktop
+    tag("fridge"); box((0.8, 0.8, 2.1), (-1.45, 1.45, 1.05), "steel")
+    tag("sink"); box((0.7, 0.5, 0.06), (0.2, 1.45, 1.1), "steel", 0.02); cyl(0.03, 0.3, (0.2, 1.68, 1.25), "steel")
+    tag("stove"); [cyl(0.13, 0.03, (x, 1.35, 1.1), "dark") for x in (0.9, 1.25)]
+    tag("cupboard"); box((0.8, 0.35, 0.5), (-0.5, 1.7, 1.8), "wood")
+    tag("island"); box((0.8, 1.6, 0.9), (-0.9, -0.9, 0.45), "wood"); box((0.9, 1.7, 0.07), (-0.9, -0.9, 0.93), "white")
     ball(0.12, (-1.1, -1.1, 1.08), "coral"); ball(0.1, (-0.85, -0.8, 1.06), "sun"); ball(0.11, (-0.75, -1.3, 1.07), "leaf")
-    for y in (-1.4, -0.4): cyl(0.18, 0.6, (-0.2, y, 0.3), "coral")  # stools
+    tag("bin"); box((0.4, 0.4, 0.55), (1.6, -1.5, 0.28), "teal", 0.06); box((0.44, 0.44, 0.06), (1.6, -1.5, 0.58), "navy", 0.03)
+    tag(None); [cyl(0.18, 0.6, (-0.2, y, 0.3), "coral") for y in (-1.4, -0.4)]  # stools
 def living_room():
     shell(wall="cream")
     box((3.0, 2.4, 0.04), (0.3, -0.1, 0.02), "lilac", 0.02)         # rug
@@ -136,14 +140,13 @@ def garage():
     box((0.6, 0.6, 0.5), (1.5, 1.4, 0.25), "wood", 0.04); box((0.5, 0.5, 0.4), (1.5, 1.4, 0.7), "wood", 0.04)
 def bedroom():
     shell(wall="lilac")
-    box((1.5, 2.2, 0.45), (0.6, 0.6, 0.25), "wood")                  # bed
-    box((1.45, 1.6, 0.18), (0.6, 0.35, 0.56), "sun", 0.08)           # duvet
-    box((1.1, 0.45, 0.18), (0.6, 1.4, 0.58), "white", 0.08)          # pillow
-    box((1.5, 0.12, 0.9), (0.6, 1.75, 0.6), "wood")                  # headboard
-    box((0.5, 0.45, 0.5), (-0.5, 1.5, 0.25), "teal"); cyl(0.1, 0.35, (-0.5, 1.5, 0.68), "coral"); ball(0.15, (-0.5, 1.5, 0.95), "cream")
-    box((1.4, 1.0, 0.03), (0.4, -0.9, 0.02), "mint", 0.01)           # rug
-    for p, c in (((-1.0, -0.8), "red"), ((-0.7, -1.2), "sky"), ((-1.2, -1.3), "sun")): box((0.25, 0.25, 0.25), (p[0], p[1], 0.13), c, 0.05)  # toys
-    box((0.7, 0.5, 1.8), (-1.6, -0.2, 0.9), "wood")                  # wardrobe
+    tag("bed"); box((1.5, 2.2, 0.45), (0.6, 0.6, 0.25), "wood"); box((1.45, 1.6, 0.18), (0.6, 0.35, 0.56), "sun", 0.08)
+    box((1.1, 0.45, 0.18), (0.6, 1.4, 0.58), "white", 0.08); box((1.5, 0.12, 0.9), (0.6, 1.75, 0.6), "wood")
+    tag("nightstand"); box((0.5, 0.45, 0.5), (-0.5, 1.5, 0.25), "teal"); cyl(0.1, 0.35, (-0.5, 1.5, 0.68), "coral"); ball(0.15, (-0.5, 1.5, 0.95), "cream")
+    tag("rug"); box((1.4, 1.0, 0.03), (0.4, -0.9, 0.02), "mint", 0.01)
+    tag("toys"); [box((0.25, 0.25, 0.25), (p[0], p[1], 0.13), c, 0.05) for p, c in (((-1.0, -0.8), "red"), ((-0.7, -1.2), "sky"), ((-1.2, -1.3), "sun"))]
+    tag("wardrobe"); box((0.7, 0.5, 1.8), (-1.6, -0.2, 0.9), "wood")
+    tag(None)
 def getting_ready():
     shell(floor="tile", wall="pink")
     box((1.2, 0.6, 0.85), (0.3, 1.5, 0.42), "white", 0.08)          # sink unit
@@ -180,8 +183,9 @@ def reset():
     ROOT = bpy.data.objects.new("root", None); sc.collection.objects.link(ROOT); ROOT.location = (0, 0, -0.75)
     return sc
 
-os.makedirs(OUT, exist_ok=True)
-for slug, build in ROOMS.items():
+if os.environ.get('ROOMS_LIB') != '1':
+  os.makedirs(OUT, exist_ok=True)
+for slug, build in (ROOMS.items() if os.environ.get('ROOMS_LIB') != '1' else []):
     if ONLY and slug not in ONLY: continue
     sc = reset(); build()
     os.makedirs(os.path.join(OUT, slug), exist_ok=True)
