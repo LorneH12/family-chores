@@ -1,0 +1,35 @@
+# Builds the site from web/ and writes config.js from repository secrets at deploy time,
+# so the project address and key are never stored in the repository.
+name: Deploy site
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write config from secrets
+        env:
+          FC_URL: ${{ secrets.SUPABASE_URL }}
+          FC_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          test -n "$FC_URL" && test -n "$FC_KEY"
+          printf 'window.FC_CONFIG = { url: "%s", key: "%s" };\n' "$FC_URL" "$FC_KEY" > web/config.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4
