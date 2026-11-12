@@ -38,3 +38,9 @@ Research summary: points and badges help at first but fade; cash and expected re
 - Polycam Space Mode free on iPhone 13+: https://poly.cam/press-release/space-mode-access-expanded-2026 · free exports: https://learn.poly.cam/hc/en-us/articles/27756102599572-What-File-Types-Can-Polycam-Export
 - Gamification and family housework apps (competence, autonomy, relatedness): https://dl.ifip.org/hal-01758462v1
 - Overjustification effect: https://yukaichou.com/gamification-analysis/overjustification-effect/
+
+## Ownership and the avatar's voice (Lorne, 2026-11-12)
+- People pick their chores, goals and plans. The app never suggests "ask for help" or "ask a parent". When someone takes on too much, their avatar offers choices ("Your call: …") and they decide.
+- Everything the app says to a person comes from their avatar, in that avatar's personality and costume. No canned lines, no one-size behaviour.
+- Built-in voice engine (web/voice.js, no AI, on the device): composes lines from personality + costume vocabulary + real context; learns per person which styles they act on (Thompson sampling over 6 styles, 10% exploration), their best hours, and never repeats a recent line. Tested: 700 lines, no broken output; 60 nudges → 60 different lines.
+- Optional AI voice (supabase/functions/avatar-voice, OFF by default, admin switches on): official Anthropic SDK pinned, default model Claude Opus 5.5 at low effort (switchable to Haiku 5.5 for ~40× lower cost via AI_VOICE_MODEL), refusal fallback on, per-person daily line limit and family monthly cap; sends only persona, intent, chore/room/goal labels and numbers. Falls back to the built-in engine whenever it's off, over a limit, declined or unreachable.

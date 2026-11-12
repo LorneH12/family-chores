@@ -1,0 +1,120 @@
+One more step for our family-chores Supabase project (after script 11).
+
+RULES: run the SQL EXACTLY as written (no edits, no "fixes"); if it fails, stop and report the full error exactly. Never show or share any key, password or token. Change nothing else. Do NOT deploy any Edge Function and do NOT add any secret in this step.
+
+STEP: SQL Editor → New query → paste SCRIPT 12 → Run.
+Expected: "Voice profiles and optional AI voice installed (AI is OFF); ALL TESTS PASSED (test data removed)".
+
+Report back: the exact output, or the exact full error.
+
+===== BEGIN SCRIPT 12: 012_voice_ai_option.sql =====
+-- Family Chores 012: avatar voice learning profiles, and the optional AI voice (off by default).
+-- Run after 001–011. Safe to re-run. Ends with its own tests (test data removed).
+
+alter table public.settings add column if not exists ai_voice boolean not null default false;
+alter table public.settings add column if not exists ai_daily_lines smallint not null default 20;      -- per person per day
+alter table public.settings add column if not exists ai_monthly_cap_cents integer not null default 300; -- family cap, estimated cost
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'settings_ai_limits') then
+    alter table public.settings add constraint settings_ai_limits check (ai_daily_lines between 0 and 200 and ai_monthly_cap_cents between 0 and 5000); end if;
+end $$;
+
+-- What the built-in voice engine has learned about each person (style stats, best hours, recent lines). Private to that person.
+create table if not exists public.voice_profiles (
+  member_id uuid primary key references public.members(id) on delete cascade,
+  family_id uuid not null references public.families(id) on delete cascade,
+  profile jsonb not null default '{}',
+  updated_at timestamptz not null default now(),
+  check (pg_column_size(profile) < 20000)
+);
+alter table public.voice_profiles enable row level security;
+revoke all on public.voice_profiles from anon, authenticated;
+grant select, insert, update on public.voice_profiles to authenticated;
+drop policy if exists vp_all on public.voice_profiles;
+create policy vp_all on public.voice_profiles for all to authenticated using (member_id = public.my_member())
+  with check (member_id = public.my_member() and family_id = public.my_family());
+
+-- AI usage ledger (written by the avatar-voice server function only); parents can see totals.
+create table if not exists public.ai_usage (
+  id bigint generated always as identity primary key,
+  family_id uuid not null references public.families(id) on delete cascade,
+  member_id uuid references public.members(id) on delete set null,
+  kind text not null default 'voice',
+  input_tokens integer not null default 0,
+  output_tokens integer not null default 0,
+  est_cost_micro integer not null default 0,        -- millionths of a dollar
+  at timestamptz not null default now()
+);
+alter table public.ai_usage enable row level security;
+revoke all on public.ai_usage from anon, authenticated;
+grant select on public.ai_usage to authenticated;
+drop policy if exists ai_read on public.ai_usage;
+create policy ai_read on public.ai_usage for select to authenticated using (public.is_parent_of(family_id));
+
+-- Server-side gate used by the avatar-voice function (service role only): is AI on, and is this person under the limits?
+create or replace function public.ai_voice_allowed(member uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select s.ai_voice
+     and (select count(*) from public.ai_usage u where u.member_id = member and u.at > now() - interval '1 day') < s.ai_daily_lines
+     and (select coalesce(sum(u.est_cost_micro), 0) from public.ai_usage u where u.family_id = m.family_id and u.at > date_trunc('month', now())) < s.ai_monthly_cap_cents * 10000
+  from public.members m join public.settings s on s.family_id = m.family_id where m.id = member $$;
+revoke all on function public.ai_voice_allowed(uuid) from public, anon, authenticated;
+grant execute on function public.ai_voice_allowed(uuid) to service_role;
+grant insert on public.ai_usage to service_role;
+
+-- only admins switch the AI voice on/off or change its limits
+create or replace function public.guard_ai_settings() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (new.ai_voice, new.ai_daily_lines, new.ai_monthly_cap_cents) is distinct from (old.ai_voice, old.ai_daily_lines, old.ai_monthly_cap_cents)
+     and auth.uid() is not null and not public.is_admin_of(new.family_id) then raise exception 'Only an admin can change the AI voice settings'; end if;
+  return new;
+end $$;
+drop trigger if exists settings_ai_guard on public.settings;
+create trigger settings_ai_guard before update on public.settings for each row execute function public.guard_ai_settings();
+
+-- ---------- tests ----------
+do $test$
+declare fa uuid := gen_random_uuid(); pa uuid := gen_random_uuid(); pb uuid := gen_random_uuid(); c1 uuid := gen_random_uuid(); c2 uuid := gen_random_uuid();
+  u_pa uuid := gen_random_uuid(); u_pb uuid := gen_random_uuid(); u_c1 uuid := gen_random_uuid(); u_c2 uuid := gen_random_uuid(); n int; ok boolean; passed int := 0;
+begin
+  insert into public.families(id, name) values (fa, 'TEST family V');
+  insert into public.settings(family_id) values (fa);
+  insert into public.members(id, family_id, user_id, display_name, role, age_group, is_admin) values
+    (pa, fa, u_pa, 'TestAdminV', 'parent', 'adult', true), (pb, fa, u_pb, 'TestParentV', 'parent', 'adult', false),
+    (c1, fa, u_c1, 'TestChildV1', 'child', 'teen', false), (c2, fa, u_c2, 'TestChildV2', 'child', 'kid', false);
+  if public.ai_voice_allowed(c1) then raise exception 'FAIL: AI voice on by default'; end if; passed := passed + 1;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pb, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  ok := false; begin update public.settings set ai_voice = true where family_id = fa; exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a non-admin parent turned on the AI voice'; end if; passed := passed + 1;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pa, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  update public.settings set ai_voice = true, ai_daily_lines = 2 where family_id = fa; passed := passed + 1;
+  execute 'reset role';
+  if not public.ai_voice_allowed(c1) then raise exception 'FAIL: AI voice not allowed after admin turned it on'; end if; passed := passed + 1;
+  insert into public.ai_usage(family_id, member_id, input_tokens, output_tokens, est_cost_micro) values (fa, c1, 300, 40, 500), (fa, c1, 300, 40, 500);
+  if public.ai_voice_allowed(c1) then raise exception 'FAIL: daily limit not enforced'; end if; passed := passed + 1;
+  if not public.ai_voice_allowed(c2) then raise exception 'FAIL: one child''s use blocked a sibling'; end if; passed := passed + 1;
+  insert into public.ai_usage(family_id, member_id, est_cost_micro) values (fa, pa, 3000000);
+  if public.ai_voice_allowed(c2) then raise exception 'FAIL: monthly cap not enforced'; end if; passed := passed + 1;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  insert into public.voice_profiles(member_id, family_id, profile) values (c1, fa, '{"arms":{}}'); passed := passed + 1;
+  ok := false; begin insert into public.voice_profiles(member_id, family_id, profile) values (c2, fa, '{}'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child wrote a sibling voice profile'; end if; passed := passed + 1;
+  select count(*) into n from public.ai_usage; if n <> 0 then raise exception 'FAIL: a child sees AI usage'; end if; passed := passed + 1;
+  ok := false; begin perform public.ai_voice_allowed(c1); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: app users can call the AI gate directly'; end if; passed := passed + 1;
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c2, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  select count(*) into n from public.voice_profiles; if n <> 0 then raise exception 'FAIL: a sibling sees a voice profile'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  delete from public.families where id = fa;
+  raise notice 'ALL % VOICE/AI TESTS PASSED', passed;
+end $test$;
+
+select 'Voice profiles and optional AI voice installed (AI is OFF); ALL TESTS PASSED (test data removed)' as result;
+
+===== END SCRIPT 12 =====

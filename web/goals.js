@@ -38,7 +38,7 @@ f.onsubmit = e => {
   </div></div>
   <div class="card"><h3 style="margin:0">Your week</h3><div class="week">${p.week.map(w => `<div class="day"><b>${w.day}</b>${w.chores.map(c => `<span class="chip">${esc(c.name)}<br><b>${money(c.cents)}</b></span>`).join('') || '<span class="muted">Rest day</span>'}</div>`).join('')}</div>
   <p class="muted">Prices assume a typical rating (90% of full pay). Great work earns more.</p></div>
-  ${p.achievable ? '' : `<div class="card"><h3 style="margin:0">Make it work</h3><ul>${p.options.map(o => `<li>${esc(o.text)}</li>`).join('')}</ul></div>`}
-  <div class="card"><h3 style="margin:0">Your if-then plan</h3><p>${esc(f.ifthen.value)}</p><p class="muted">Share this goal with a parent from Messages: they can cheer you on or add a match.</p></div>`;
+  ${p.achievable ? '' : `<div class="card"><h3 style="margin:0">Your call: ways to make it work</h3><ul>${p.options.map(o => `<li>${esc(o.text)}</li>`).join('')}</ul></div>`}
+  <div class="card"><h3 style="margin:0">Your if-then plan</h3><p>${esc(f.ifthen.value)}</p><p class="muted">Want to celebrate milestones with someone? You can share this goal from Messages.</p></div>`;
   $('#out').scrollIntoView({ behavior: 'smooth' });
 };

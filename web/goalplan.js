@@ -48,10 +48,12 @@
       weeks, need, perWeek, weeklyEarnings: total, minutesPerWeek: minutes, achievable, bonus,
       week: week.map((list, i) => ({ day: DAYS[i], chores: list.map(c => ({ name: c.name, cents: Math.round(c.pay * pct) })) })),
       checkpoints, realisticEnd,
+      // the person decides; these are choices, not instructions
       options: achievable ? [] : [
-        { kind: 'later', text: `Move the date to ${realisticEnd.toDateString()} (${weeksNeeded} weeks at about $${(maxWeekly / 100).toFixed(2)} a week)` },
-        { kind: 'smaller', text: `First step: $${(Math.min(need, maxWeekly * weeks) / 100).toFixed(2)} by the date, then keep going` },
-        { kind: 'match', text: `Ask a parent to match ${Math.min(100, Math.ceil((1 - (maxWeekly * weeks) / need) * 100))}% of it` },
+        { kind: 'later', text: `Give it until ${realisticEnd.toDateString()}: ${weeksNeeded} weeks at about $${(maxWeekly / 100).toFixed(2)} a week` },
+        { kind: 'milestone', text: `Make $${(Math.min(need, maxWeekly * weeks) / 100).toFixed(2)} your first milestone by the date, then go for the rest` },
+        { kind: 'bigger', text: 'Take on a bigger earner: claim a whole room for the bonus, or add a weekend chore' },
+        { kind: 'trim', text: 'Pick a version of the goal that costs less now, and upgrade later' },
       ],
     };
   }
