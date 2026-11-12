@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'none'">
+<meta name="theme-color" content="#2f6f4f">
+<title>Room wheel (prototype)</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(120% 90% at 50% 20%,#fff7e6 0%,#ffe2c4 45%,#f7c59f 100%);
+    font:16px/1.4 "Segoe UI",system-ui,-apple-system,sans-serif;color:#2b2b2b;touch-action:none;-webkit-user-select:none;user-select:none}
+  header{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+  header b{font-size:18px} .health{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+  .hbar{width:110px;height:12px;border-radius:99px;background:rgba(0,0,0,.12);overflow:hidden} .hbar i{display:block;height:100%;width:62%;background:linear-gradient(90deg,#7dc36b,#2f6f4f)}
+  .stage{position:absolute;inset:0;perspective:1100px;perspective-origin:50% 45%}
+  .drum{position:absolute;left:50%;top:40%;width:0;height:0;transform-style:preserve-3d}
+  .card{position:absolute;left:-150px;top:-150px;width:300px;height:300px;transform-style:preserve-3d;backface-visibility:hidden;border:0;background:none;padding:0;cursor:pointer}
+  .card .art{position:absolute;inset:0;background-repeat:no-repeat;background-size:1200% 100%;filter:drop-shadow(0 18px 18px rgba(80,40,0,.25))}
+  .card .tag{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);white-space:nowrap;background:#fff;border-radius:99px;padding:6px 14px;font-weight:800;font-size:15px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  .card .dust{position:absolute;inset:18% 15% 25% 15%;pointer-events:none;background:radial-gradient(circle,rgba(120,100,80,.5) 1.2px,transparent 1.8px) 0 0/34px 30px;opacity:0;transition:opacity .4s}
+  .card.front .tag{background:#2f6f4f;color:#fff}
+  .panel{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;border-radius:22px 22px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.12)}
+  .panel h2{margin:0 0 2px;font-size:22px} .meta{color:#6b6b6b;font-size:14px}
+  .row{display:flex;gap:8px;margin-top:12px} .btn{flex:1;border:0;border-radius:14px;padding:13px 10px;font:inherit;font-weight:800;cursor:pointer;min-height:48px}
+  .btn.go{background:#2f6f4f;color:#fff} .btn.alt{background:#fff1d6;color:#7a4b00}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px} .chip{background:#f3efe9;border-radius:99px;padding:5px 10px;font-size:13px;font-weight:600}
+  .spark{display:inline-flex;gap:2px;vertical-align:middle} .spark i{width:10px;height:10px;border-radius:50%;background:#e6dccf} .spark i.on{background:#f2a900}
+  .nav{position:fixed;right:12px;top:40%;z-index:6;display:flex;flex-direction:column;gap:10px}
+  .nav button{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.85);font-size:20px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+  .hint{position:fixed;left:0;right:0;top:56px;text-align:center;font-size:13px;color:#7a4b00;font-weight:600;z-index:4}
+  :focus-visible{outline:3px solid #2f6f4f;outline-offset:3px}
+  .burst{position:fixed;inset:0;pointer-events:none;z-index:9}
+  @media (prefers-reduced-motion:reduce){.stage{display:none}.list{display:block!important}}
+  .list{display:none;padding:70px 16px 260px;height:100%;overflow:auto;box-sizing:border-box}
+</style>
+</head>
+<body>
+<header><b>Pick a room</b><div class="health" title="House Health: every chore done fills it">🏡 House Health <span class="hbar"><i></i></span></div></header>
+<div class="hint">Swipe up/down to spin · drag the room sideways to turn it</div>
+<div class="stage" id="stage"><div class="drum" id="drum"></div></div>
+<div class="list" id="list"></div>
+<div class="nav"><button id="up" aria-label="Previous room">▲</button><button id="down" aria-label="Next room">▼</button></div>
+<section class="panel" aria-live="polite" id="panel"></section>
+<canvas class="burst" id="burst"></canvas>
+<script src="wheel.js"></script>
+</body>
+</html>

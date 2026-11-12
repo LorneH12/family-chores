@@ -1,0 +1,863 @@
+WARN (bgl): C:\Users\blender\git\blender-v450\blender.git\source\blender\python\generic\bgl.cc:2673 BPyInit_bgl: 'bgl' imported without an OpenGL backend. Please update your add-ons to use the 'gpu' module.
+Blender 4.5.1 LTS (hash b0a72b245dcf built 2025-07-29 06:36:07)
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:08.18 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:08.56 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:08.86 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:09.01 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\00.png'
+Time: 00:09.19 (Saving: 00:00.06)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.24 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.52 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.80 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.96 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\01.png'
+Time: 00:01.13 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.37 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.78 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.19 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.43 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\02.png'
+Time: 00:01.63 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.91 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.10 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\03.png'
+Time: 00:01.32 (Saving: 00:00.06)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.36 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.63 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.10 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\04.png'
+Time: 00:01.31 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.81 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.96 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\05.png'
+Time: 00:01.12 (Saving: 00:00.03)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.20 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.48 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.82 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.99 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\06.png'
+Time: 00:01.20 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.32 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.62 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.92 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.10 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\07.png'
+Time: 00:01.32 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.62 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.09 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\08.png'
+Time: 00:01.31 (Saving: 00:00.06)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.32 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.59 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.87 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.03 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\09.png'
+Time: 00:01.24 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.50 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.78 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.06 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.21 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\10.png'
+Time: 00:01.40 (Saving: 00:00.03)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.23 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.49 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.75 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.90 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\kitchen\11.png'
+Time: 00:01.15 (Saving: 00:00.06)
+
+Reloading external rigs...
+Reloading external metarigs...
+HiFi Architecture Builder v3.8 registered
+home_builder addon: Verbose is enabled
+home_builder addon: Read in JSON settings from file
+BlenderMCP addon registered
+HiFi Architecture Builder v3.8 unregistered
+BlenderMCP addon unregistered
+ROOM DONE kitchen
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.35 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.66 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.98 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.15 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\00.png'
+Time: 00:01.39 (Saving: 00:00.05)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.64 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.94 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.12 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\01.png'
+Time: 00:01.39 (Saving: 00:00.06)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.37 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.79 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.21 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.44 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\02.png'
+Time: 00:01.68 (Saving: 00:00.05)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.84 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.02 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\03.png'
+Time: 00:01.26 (Saving: 00:00.05)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.62 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.92 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.07 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\04.png'
+Time: 00:01.33 (Saving: 00:00.05)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.34 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.65 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.95 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.14 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\05.png'
+Time: 00:01.41 (Saving: 00:00.06)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.32 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.70 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.00 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.16 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\06.png'
+Time: 00:01.44 (Saving: 00:00.05)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.59 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.90 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.07 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\07.png'
+Time: 00:01.29 (Saving: 00:00.06)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.86 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.03 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\08.png'
+Time: 00:01.25 (Saving: 00:00.05)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.30 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.94 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.15 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\09.png'
+Time: 00:01.48 (Saving: 00:00.05)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.35 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.63 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.98 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.20 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\10.png'
+Time: 00:01.54 (Saving: 00:00.11)
+
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:00.67 | Rendering 25 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.05 | Rendering 50 / 64 samples
+Fra:1 Mem:45.72M (Peak 45.72M) | Time:00:01.34 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\living-room\11.png'
+Time: 00:01.64 (Saving: 00:00.11)
+
+ROOM DONE living-room
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.31 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.67 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.01 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.23 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\00.png'
+Time: 00:01.40 (Saving: 00:00.04)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.67 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.13 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.36 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\01.png'
+Time: 00:01.65 (Saving: 00:00.05)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.24 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.98 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.22 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\02.png'
+Time: 00:01.49 (Saving: 00:00.07)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.60 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.02 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.25 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\03.png'
+Time: 00:01.59 (Saving: 00:00.07)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.24 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.18 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\04.png'
+Time: 00:01.48 (Saving: 00:00.06)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.97 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.17 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\05.png'
+Time: 00:01.37 (Saving: 00:00.06)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.37 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.97 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.46 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.77 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\06.png'
+Time: 00:02.42 (Saving: 00:00.24)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.42 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.84 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.28 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.50 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\07.png'
+Time: 00:01.82 (Saving: 00:00.07)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.34 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.74 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.16 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.37 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\08.png'
+Time: 00:01.85 (Saving: 00:00.11)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.69 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.09 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.31 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\09.png'
+Time: 00:01.48 (Saving: 00:00.04)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.24 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.00 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.22 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\10.png'
+Time: 00:01.59 (Saving: 00:00.07)
+
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:00.74 | Rendering 25 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.20 | Rendering 50 / 64 samples
+Fra:1 Mem:44.94M (Peak 44.94M) | Time:00:01.48 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\main-bathroom\11.png'
+Time: 00:01.79 (Saving: 00:00.08)
+
+ROOM DONE main-bathroom
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.04 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.30 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\00.png'
+Time: 00:01.71 (Saving: 00:00.08)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.30 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.68 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.11 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.36 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\01.png'
+Time: 00:01.70 (Saving: 00:00.08)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.32 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.73 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.21 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.49 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\02.png'
+Time: 00:01.85 (Saving: 00:00.09)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.37 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.88 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.31 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.59 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\03.png'
+Time: 00:01.98 (Saving: 00:00.10)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.65 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.05 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.27 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\04.png'
+Time: 00:01.76 (Saving: 00:00.11)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.28 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.72 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.20 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.51 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\05.png'
+Time: 00:02.00 (Saving: 00:00.15)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.30 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.78 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.26 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.56 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\06.png'
+Time: 00:01.85 (Saving: 00:00.08)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.41 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.88 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.37 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.61 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\07.png'
+Time: 00:01.90 (Saving: 00:00.07)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.00 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.74 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:02.10 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\08.png'
+Time: 00:02.44 (Saving: 00:00.07)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.62 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.01 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.25 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\09.png'
+Time: 00:01.77 (Saving: 00:00.15)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.60 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.15 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\10.png'
+Time: 00:01.47 (Saving: 00:00.08)
+
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.36 | Rendering 1 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.64 | Rendering 25 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:00.95 | Rendering 50 / 64 samples
+Fra:1 Mem:45.88M (Peak 45.88M) | Time:00:01.14 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\hallway-and-entry\11.png'
+Time: 00:01.39 (Saving: 00:00.06)
+
+ROOM DONE hallway-and-entry
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.31 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.60 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.12 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\00.png'
+Time: 00:01.50 (Saving: 00:00.06)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.91 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.09 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\01.png'
+Time: 00:01.32 (Saving: 00:00.06)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.32 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.94 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.14 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\02.png'
+Time: 00:01.37 (Saving: 00:00.06)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.28 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.59 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.94 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.14 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\03.png'
+Time: 00:01.39 (Saving: 00:00.06)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.95 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.15 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\04.png'
+Time: 00:01.41 (Saving: 00:00.05)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.31 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.92 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.11 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\05.png'
+Time: 00:01.53 (Saving: 00:00.05)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.26 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.52 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.80 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.98 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\06.png'
+Time: 00:01.21 (Saving: 00:00.06)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.28 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.85 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.02 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\07.png'
+Time: 00:01.33 (Saving: 00:00.13)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.46 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.76 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.20 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.49 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\08.png'
+Time: 00:01.94 (Saving: 00:00.07)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.41 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.80 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.14 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.36 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\09.png'
+Time: 00:01.70 (Saving: 00:00.06)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.96 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.20 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\10.png'
+Time: 00:01.59 (Saving: 00:00.08)
+
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.38 | Rendering 1 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:00.93 | Rendering 25 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.39 | Rendering 50 / 64 samples
+Fra:1 Mem:46.49M (Peak 46.49M) | Time:00:01.77 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\laundry\11.png'
+Time: 00:02.15 (Saving: 00:00.07)
+
+ROOM DONE laundry
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.26 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.89 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.12 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\00.png'
+Time: 00:01.41 (Saving: 00:00.06)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.34 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.63 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.95 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.12 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\01.png'
+Time: 00:01.39 (Saving: 00:00.06)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.59 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.87 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.16 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.33 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\02.png'
+Time: 00:01.94 (Saving: 00:00.29)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.38 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.65 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.95 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.27 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\03.png'
+Time: 00:01.63 (Saving: 00:00.12)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.87 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.03 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\04.png'
+Time: 00:01.26 (Saving: 00:00.07)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.38 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.67 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.98 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.14 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\05.png'
+Time: 00:01.40 (Saving: 00:00.06)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.36 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.67 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.96 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.12 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\06.png'
+Time: 00:01.34 (Saving: 00:00.05)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.85 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.01 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\07.png'
+Time: 00:01.21 (Saving: 00:00.05)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.28 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.53 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.84 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.03 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\08.png'
+Time: 00:01.25 (Saving: 00:00.05)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.53 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.88 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.11 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\09.png'
+Time: 00:01.36 (Saving: 00:00.09)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.84 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.01 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\10.png'
+Time: 00:01.25 (Saving: 00:00.06)
+
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.41 | Rendering 1 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:00.78 | Rendering 25 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.17 | Rendering 50 / 64 samples
+Fra:1 Mem:47.36M (Peak 47.36M) | Time:00:01.38 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\dining-room\11.png'
+Time: 00:01.72 (Saving: 00:00.06)
+
+ROOM DONE dining-room
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.32 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.59 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.61 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.80 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\00.png'
+Time: 00:01.99 (Saving: 00:00.04)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.20 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.42 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.66 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.79 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\01.png'
+Time: 00:01.02 (Saving: 00:00.05)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.24 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.52 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.79 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.96 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\02.png'
+Time: 00:01.25 (Saving: 00:00.05)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.53 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.92 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.09 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\03.png'
+Time: 00:01.32 (Saving: 00:00.05)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.23 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.53 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.81 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.99 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\04.png'
+Time: 00:01.22 (Saving: 00:00.05)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.83 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.00 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\05.png'
+Time: 00:01.38 (Saving: 00:00.06)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.37 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.87 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.02 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\06.png'
+Time: 00:01.24 (Saving: 00:00.05)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.35 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.62 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.88 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.03 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\07.png'
+Time: 00:01.43 (Saving: 00:00.18)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.37 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.62 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.89 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.04 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\08.png'
+Time: 00:01.29 (Saving: 00:00.05)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.99 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.16 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\09.png'
+Time: 00:01.42 (Saving: 00:00.06)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.22 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.49 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.80 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.99 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\10.png'
+Time: 00:01.26 (Saving: 00:00.06)
+
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.30 | Rendering 1 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.57 | Rendering 25 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:00.86 | Rendering 50 / 64 samples
+Fra:1 Mem:47.12M (Peak 47.12M) | Time:00:01.03 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\yard-and-outside\11.png'
+Time: 00:01.31 (Saving: 00:00.05)
+
+ROOM DONE yard-and-outside
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.24 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.54 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.91 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.15 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\00.png'
+Time: 00:01.51 (Saving: 00:00.08)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.75 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.18 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.42 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\01.png'
+Time: 00:01.74 (Saving: 00:00.06)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.64 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.98 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.18 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\02.png'
+Time: 00:01.47 (Saving: 00:00.06)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.57 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.96 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.17 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\03.png'
+Time: 00:01.42 (Saving: 00:00.06)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.23 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.60 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.03 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.28 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\04.png'
+Time: 00:01.53 (Saving: 00:00.07)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.59 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.03 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.33 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\05.png'
+Time: 00:01.63 (Saving: 00:00.07)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.31 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.67 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.08 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.33 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\06.png'
+Time: 00:01.64 (Saving: 00:00.06)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.66 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.08 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.31 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\07.png'
+Time: 00:01.62 (Saving: 00:00.06)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.57 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.00 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.26 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\08.png'
+Time: 00:01.61 (Saving: 00:00.06)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.22 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.54 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.88 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.08 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\09.png'
+Time: 00:01.35 (Saving: 00:00.06)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.98 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.20 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\10.png'
+Time: 00:01.46 (Saving: 00:00.07)
+
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.59 | Rendering 25 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:00.92 | Rendering 50 / 64 samples
+Fra:1 Mem:46.02M (Peak 46.02M) | Time:00:01.10 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\garage\11.png'
+Time: 00:01.38 (Saving: 00:00.07)
+
+ROOM DONE garage
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.91 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.08 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\00.png'
+Time: 00:01.31 (Saving: 00:00.07)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.26 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.86 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.05 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\01.png'
+Time: 00:01.33 (Saving: 00:00.06)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.56 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.90 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.17 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\02.png'
+Time: 00:01.41 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.22 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.49 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.80 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.99 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\03.png'
+Time: 00:01.24 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.31 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.92 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.11 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\04.png'
+Time: 00:02.12 (Saving: 00:00.53)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.60 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.88 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.04 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\05.png'
+Time: 00:01.29 (Saving: 00:00.06)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.28 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.83 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.99 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\06.png'
+Time: 00:01.19 (Saving: 00:00.05)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.22 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.50 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.83 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.99 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\07.png'
+Time: 00:01.20 (Saving: 00:00.03)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.21 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.52 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.16 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\08.png'
+Time: 00:01.45 (Saving: 00:00.07)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.26 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.60 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.16 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\09.png'
+Time: 00:01.53 (Saving: 00:00.07)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.29 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.60 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.93 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:01.11 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\10.png'
+Time: 00:01.97 (Saving: 00:00.67)
+
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.26 | Rendering 1 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.52 | Rendering 25 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.80 | Rendering 50 / 64 samples
+Fra:1 Mem:46.10M (Peak 46.10M) | Time:00:00.95 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\bedroom\11.png'
+Time: 00:01.27 (Saving: 00:00.12)
+
+ROOM DONE bedroom
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.54 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.81 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.98 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\00.png'
+Time: 00:01.23 (Saving: 00:00.05)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.34 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.62 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.91 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.08 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\01.png'
+Time: 00:02.17 (Saving: 00:00.16)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.33 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.61 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.87 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.03 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\02.png'
+Time: 00:01.21 (Saving: 00:00.03)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.21 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.51 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.82 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.00 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\03.png'
+Time: 00:01.26 (Saving: 00:00.06)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.13 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.40 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.67 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.83 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\04.png'
+Time: 00:02.06 (Saving: 00:00.03)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.21 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.48 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.76 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.93 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\05.png'
+Time: 00:01.13 (Saving: 00:00.05)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.22 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.86 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.13 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.28 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\06.png'
+Time: 00:01.51 (Saving: 00:00.06)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.23 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.64 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.95 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.11 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\07.png'
+Time: 00:01.31 (Saving: 00:00.05)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.28 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.20 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.37 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\08.png'
+Time: 00:01.62 (Saving: 00:00.05)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.27 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.55 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.83 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.01 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\09.png'
+Time: 00:01.25 (Saving: 00:00.05)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.28 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.58 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.86 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:01.04 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\10.png'
+Time: 00:01.24 (Saving: 00:00.05)
+
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.25 | Rendering 1 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.51 | Rendering 25 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.77 | Rendering 50 / 64 samples
+Fra:1 Mem:45.77M (Peak 45.77M) | Time:00:00.92 | Rendering 64 / 64 samples
+Saved: 'C:\Users\lorne\claude-projects\family-chores\art\renders\getting-ready\11.png'
+Time: 00:01.13 (Saving: 00:00.05)
+
+ROOM DONE getting-ready
+ALL DONE
+
+Blender quit

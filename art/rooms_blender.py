@@ -83,17 +83,17 @@ def main_bathroom():
     box((0.55, 0.25, 0.7), (-1.65, -0.2, 0.75), "white", 0.08)
     box((0.8, 0.55, 0.85), (-1.45, 1.0, 0.42), "wood")              # vanity
     box((0.55, 0.4, 0.08), (-1.4, 1.0, 0.88), "white", 0.03)
-    box((0.05, 0.7, 0.8), (-1.88, 1.0, 1.6), "sky", 0.02)           # mirror
+    box((0.06, 0.7, 0.8), (-1.77, 1.0, 1.6), "sky", 0.02)           # mirror
     box((0.9, 0.6, 0.03), (0.4, 0.2, 0.02), "pink", 0.01)           # bath mat
 def hallway_and_entry():
     shell(d=4.0, wall="cream")
     box((1.0, 3.4, 0.03), (0.2, -0.2, 0.02), "coral", 0.01)         # runner
-    box((0.9, 0.12, 2.0), (0.9, 1.88, 1.0), "wood")                 # door
-    ball(0.06, (1.2, 1.8, 1.0), "sun")
+    box((0.9, 0.12, 2.0), (0.9, 1.72, 1.0), "wood")                 # door
+    ball(0.07, (1.25, 1.64, 1.0), "sun")
     box((0.4, 1.2, 0.5), (-1.6, 0.0, 0.25), "wood")                 # shoe bench
     for y in (-0.35, 0.0, 0.35): box((0.25, 0.14, 0.12), (-1.55, y, 0.56), ["navy", "red", "mint"][int((y + 0.35) / 0.35)], 0.04)
-    for z, c in ((1.5, "sky"), (1.9, "sun")): box((0.05, 0.5, 0.35), (-1.88, -0.9, z), c, 0.02)  # frames
-    for y in (0.9, 1.2): cyl(0.04, 0.3, (-1.85, y, 1.7), "dark", rot=(0, 90, 0))  # coat hooks
+    for z, c in ((1.5, "sky"), (1.9, "sun")): box((0.06, 0.5, 0.35), (-1.77, -0.9, z), c, 0.02)  # frames
+    for y in (0.9, 1.2): cyl(0.04, 0.3, (-1.65, y, 1.7), "dark", rot=(0, 90, 0))  # coat hooks
 def laundry():
     shell(floor="tile", wall="wall2")
     for x, c in ((-0.6, "white"), (0.35, "white")):
@@ -148,7 +148,7 @@ def getting_ready():
     shell(floor="tile", wall="pink")
     box((1.2, 0.6, 0.85), (0.3, 1.5, 0.42), "white", 0.08)          # sink unit
     box((0.6, 0.4, 0.07), (0.3, 1.45, 0.88), "sky", 0.03)
-    box((1.0, 0.06, 0.9), (0.3, 1.88, 1.6), "sky", 0.03)            # mirror
+    box((1.0, 0.06, 0.9), (0.3, 1.77, 1.6), "sky", 0.03)            # mirror
     cyl(0.08, 0.2, (0.85, 1.45, 0.98), "mint"); cyl(0.015, 0.25, (0.85, 1.45, 1.15), "coral")  # toothbrush cup
     box((0.7, 0.55, 1.9), (-1.55, 0.2, 0.95), "wood")                # wardrobe
     box((0.06, 0.4, 0.5), (-1.2, 0.2, 1.2), "sun", 0.02)            # coat on door
