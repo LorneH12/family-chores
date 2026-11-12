@@ -1,0 +1,399 @@
+You are helping me with our family-chores Supabase project again (you set it up earlier). Please do exactly these steps, in order, and report back. Do not improvise or "improve" anything.
+
+RULES
+- Run every SQL script below EXACTLY as written: do not edit, shorten, reorder, split or "fix" it. If one fails, stop and report the full error text exactly. Do not attempt a fix.
+- Paste the Edge Function code EXACTLY as written.
+- Never show, copy or share any secret: database password, secret / service_role key, JWT secret, access tokens. Do not create API keys. Do not add any secrets anywhere.
+- Do not change any other settings, delete anything, add real family data, or create users.
+- If Supabase warns about destructive operations in a query, confirm and run it.
+
+STEP 1: Authentication setting
+Authentication → Sign In / Providers: turn OFF "Allow anonymous sign-ins" (no longer needed) and save. Leave Email ON. Change nothing else.
+
+STEP 2: SQL Editor → New query → paste SCRIPT 3 → Run. Expected: "Kid logins installed".
+STEP 3: New query → paste SCRIPT 4 → Run. Expected: "ALL KID LOGIN TESTS PASSED (test data removed)".
+STEP 4: New query → paste SCRIPT 5 → Run. Expected: "Parent takeovers installed; ALL TAKEOVER TESTS PASSED (test data removed)".
+
+STEP 5: Edge Function
+Edge Functions → Deploy a new function → "Via Editor" (browser editor).
+- Function name: kid-login   (exactly this)
+- Replace the default code with the FUNCTION CODE below.
+- Turn OFF "Verify JWT" / "Enforce JWT verification" for this function (children aren't signed in yet when they use it). If the setting only appears after deploying, open the function's Details/Settings and turn it off there, then save.
+- Deploy.
+- Do not add any secrets: the function uses the project's built-in variables.
+
+STEP 6: Report back with exactly:
+1. Anonymous sign-ins: ON or OFF
+2. Script 3 result (exact output or full error)
+3. Script 4 result (exact output or full error)
+4. Script 5 result (exact output or full error)
+5. Edge Function: deployed yes/no, its exact name, its URL (https://….supabase.co/functions/v1/kid-login), and whether "Verify JWT" is OFF
+Nothing else: no keys, no passwords.
+
+===== BEGIN SCRIPT 3: 003_kid_logins.sql =====
+-- Family Chores: children sign in with a username + password set by a parent (no email).
+-- Run after 001. Safe to re-run.
+-- Passwords are stored only as bcrypt hashes in a table nobody can read from the app.
+
+create extension if not exists pgcrypto with schema extensions;
+
+alter table public.members add column if not exists username text;
+alter table public.members add column if not exists device_restricted boolean not null default false;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'members_username_format') then
+    alter table public.members add constraint members_username_format check (username is null or username ~ '^[a-z0-9_]{3,20}$');
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'members_username_key') then
+    alter table public.members add constraint members_username_key unique (username);
+  end if;
+end $$;
+
+alter table public.settings add column if not exists kid_idle_minutes smallint not null default 30;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'settings_kid_idle') then
+    alter table public.settings add constraint settings_kid_idle check (kid_idle_minutes between 5 and 240);
+  end if;
+end $$;
+
+-- Secrets: no grants to app users at all. Only the functions below touch it.
+create table if not exists public.member_login (
+  member_id uuid primary key references public.members(id) on delete cascade,
+  pass_hash text not null,
+  failed_attempts smallint not null default 0,
+  locked_until timestamptz,
+  updated_at timestamptz not null default now()
+);
+alter table public.member_login enable row level security;
+revoke all on public.member_login from anon, authenticated;
+
+-- Optional device restriction: a child can only sign in on devices a parent approved.
+create table if not exists public.member_devices (
+  member_id uuid not null references public.members(id) on delete cascade,
+  family_id uuid not null references public.families(id) on delete cascade,
+  device_id text not null check (char_length(device_id) between 16 and 64),
+  label text check (char_length(label) <= 30),
+  added_at timestamptz not null default now(),
+  primary key (member_id, device_id)
+);
+alter table public.member_devices enable row level security;
+revoke all on public.member_devices from anon, authenticated;
+grant select, insert, delete on public.member_devices to authenticated;
+drop policy if exists dev_read on public.member_devices;
+drop policy if exists dev_write on public.member_devices;
+drop policy if exists dev_delete on public.member_devices;
+create policy dev_read on public.member_devices for select to authenticated using (member_id = public.my_member() or public.is_parent_of(family_id));
+create policy dev_write on public.member_devices for insert to authenticated with check (public.is_parent_of(family_id)
+  and family_id = (select m.family_id from public.members m where m.id = member_id));
+create policy dev_delete on public.member_devices for delete to authenticated using (public.is_parent_of(family_id));
+
+-- Parent sets or resets a child's username + password (6–40 characters).
+create or replace function public.set_kid_login(member uuid, uname text, pass text) returns void
+language plpgsql security definer set search_path = '' as $$
+declare m public.members;
+begin
+  select * into m from public.members where id = member;
+  if m.id is null or not public.is_parent_of(m.family_id) then raise exception 'Only a parent can do this'; end if;
+  if m.role <> 'child' then raise exception 'Parents sign in with email'; end if;
+  if char_length(pass) < 6 or char_length(pass) > 40 then raise exception 'Password must be 6 to 40 characters'; end if;
+  update public.members set username = lower(trim(uname)) where id = member;
+  insert into public.member_login(member_id, pass_hash) values (member, extensions.crypt(pass, extensions.gen_salt('bf', 10)))
+    on conflict (member_id) do update set pass_hash = excluded.pass_hash, failed_attempts = 0, locked_until = null, updated_at = now();
+  perform public.log(m.family_id, 'kid_login_set', jsonb_build_object('member', member));
+end $$;
+
+-- Parent unlocks a child after too many wrong passwords.
+create or replace function public.unlock_kid(member uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare fam uuid; begin
+  select family_id into fam from public.members where id = member;
+  if fam is null or not public.is_parent_of(fam) then raise exception 'Only a parent can do this'; end if;
+  update public.member_login set failed_attempts = 0, locked_until = null where member_id = member;
+  perform public.log(fam, 'kid_unlocked', jsonb_build_object('member', member));
+end $$;
+
+-- Called ONLY by the kid-login server function (service role). Checks password, lockout and device.
+create or replace function public.kid_auth(uname text, pass text, device text)
+returns table(member_id uuid, user_id uuid, family_id uuid, error text)
+language plpgsql security definer set search_path = '' as $$
+#variable_conflict use_column
+declare m public.members; l public.member_login;
+begin
+  select * into m from public.members where username = lower(trim(uname)) and role = 'child' and active;
+  if m.id is null then return query select null::uuid, null::uuid, null::uuid, 'Wrong username or password'::text; return; end if;
+  select * into l from public.member_login where member_login.member_id = m.id;
+  if l.member_id is null then return query select null::uuid, null::uuid, null::uuid, 'Wrong username or password'::text; return; end if;
+  if l.locked_until is not null and l.locked_until > now() then
+    return query select null::uuid, null::uuid, null::uuid, 'Too many tries. Ask a parent, or wait 15 minutes.'::text; return; end if;
+  if extensions.crypt(pass, l.pass_hash) <> l.pass_hash then
+    update public.member_login set failed_attempts = failed_attempts + 1,
+      locked_until = case when failed_attempts + 1 >= 5 then now() + interval '15 minutes' else null end
+      where member_login.member_id = m.id;
+    if l.failed_attempts + 1 >= 5 then
+      insert into public.audit_log(family_id, actor, action, detail) values (m.family_id, m.id, 'kid_locked', null);
+    end if;
+    return query select null::uuid, null::uuid, null::uuid, 'Wrong username or password'::text; return;
+  end if;
+  if m.device_restricted and not exists (select 1 from public.member_devices d where d.member_id = m.id and d.device_id = device) then
+    return query select null::uuid, null::uuid, null::uuid, 'This device isn''t allowed for your account. Ask a parent.'::text; return;
+  end if;
+  update public.member_login set failed_attempts = 0, locked_until = null where member_login.member_id = m.id;
+  return query select m.id, m.user_id, m.family_id, null::text;
+end $$;
+
+-- Called ONLY by the kid-login function after it creates the child's hidden sign-in account.
+create or replace function public.link_kid_user(member uuid, uid uuid) returns void
+language sql security definer set search_path = '' as $$
+  update public.members set user_id = uid where id = member and role = 'child' and user_id is null $$;
+
+revoke all on function public.set_kid_login(uuid,text,text), public.unlock_kid(uuid), public.kid_auth(text,text,text), public.link_kid_user(uuid,uuid) from public, anon, authenticated;
+grant execute on function public.set_kid_login(uuid,text,text), public.unlock_kid(uuid) to authenticated;
+grant execute on function public.kid_auth(text,text,text), public.link_kid_user(uuid,uuid) to service_role;
+
+select 'Kid logins installed' as result;
+
+===== END SCRIPT 3 =====
+
+===== BEGIN SCRIPT 4: 004_kid_login_tests.sql =====
+-- Family Chores: tests for child usernames/passwords, lockout and device restriction.
+-- Run after 003. Uses fake test people and removes them. Success = ALL KID LOGIN TESTS PASSED.
+do $test$
+declare
+  fa uuid := gen_random_uuid(); pa uuid := gen_random_uuid(); c1 uuid := gen_random_uuid(); c2 uuid := gen_random_uuid();
+  u_pa uuid := gen_random_uuid(); u_c1 uuid := gen_random_uuid();
+  n int; ok boolean; r record; passed int := 0; i int; uname text := 'testkid_' || substr(replace(gen_random_uuid()::text,'-',''),1,8);
+begin
+  insert into public.families(id, name) values (fa, 'TEST family K');
+  insert into public.settings(family_id) values (fa);
+  insert into public.members(id, family_id, user_id, display_name, role, age_group) values
+    (pa, fa, u_pa, 'TestParentK', 'parent', 'adult'), (c1, fa, u_c1, 'TestKidK1', 'child', 'teen'), (c2, fa, null, 'TestKidK2', 'child', 'kid');
+
+  -- parent sets logins
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pa, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  perform public.set_kid_login(c2, uname, 'correct-horse'); passed := passed + 1;
+  ok := false; begin perform public.set_kid_login(c2, uname, '123'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a 3-character password was accepted'; end if; passed := passed + 1;
+  ok := false; begin perform public.set_kid_login(pa, 'parentname', 'whatever123'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a parent got a username login'; end if; passed := passed + 1;
+  ok := false; begin perform count(*) from public.member_login; exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: app users can read password hashes'; end if; passed := passed + 1;
+  ok := false; begin perform * from public.kid_auth(uname, 'correct-horse', 'x'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: app users can call kid_auth directly'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  -- a child cannot set or reset a sibling's password
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  ok := false; begin perform public.set_kid_login(c2, uname, 'hacked-pass'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child reset a sibling password'; end if; passed := passed + 1;
+  ok := false; begin perform public.unlock_kid(c2); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child unlocked an account'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  -- the server function's checks (run as the service role)
+  execute 'set local role service_role';
+  select * into r from public.kid_auth(upper(uname), 'correct-horse', 'device-aaaaaaaaaaaaaaaa');
+  if r.error is not null or r.member_id <> c2 then raise exception 'FAIL: correct password rejected (%)', r.error; end if; passed := passed + 1;
+  select * into r from public.kid_auth(uname, 'wrong', 'd'); if r.error is null then raise exception 'FAIL: wrong password accepted'; end if; passed := passed + 1;
+  select * into r from public.kid_auth('nobody_here', 'x', 'd'); if r.error <> 'Wrong username or password' then raise exception 'FAIL: unknown user message leaks (%)', r.error; end if; passed := passed + 1;
+  for i in 1..5 loop select * into r from public.kid_auth(uname, 'wrong', 'd'); end loop;
+  select * into r from public.kid_auth(uname, 'correct-horse', 'd');
+  if r.error is null or r.error not like 'Too many tries%' then raise exception 'FAIL: no lockout after 5 wrong tries (%)', r.error; end if; passed := passed + 1;
+  execute 'reset role';
+
+  -- parent unlocks and turns on the device restriction
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pa, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  perform public.unlock_kid(c2);
+  update public.members set device_restricted = true where id = c2;
+  insert into public.member_devices(member_id, family_id, device_id, label) values (c2, fa, 'device-aaaaaaaaaaaaaaaa', 'Kitchen laptop');
+  execute 'reset role';
+  execute 'set local role service_role';
+  select * into r from public.kid_auth(uname, 'correct-horse', 'device-aaaaaaaaaaaaaaaa');
+  if r.error is not null then raise exception 'FAIL: approved device rejected (%)', r.error; end if; passed := passed + 1;
+  select * into r from public.kid_auth(uname, 'correct-horse', 'device-bbbbbbbbbbbbbbbb');
+  if r.error is null then raise exception 'FAIL: unapproved device allowed'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  -- a child cannot add their own device
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  ok := false; begin insert into public.member_devices(member_id, family_id, device_id) values (c1, fa, 'device-cccccccccccccccc'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child approved their own device'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  delete from public.families where id = fa;
+  raise notice 'ALL % KID LOGIN TESTS PASSED', passed;
+end
+$test$;
+select 'ALL KID LOGIN TESTS PASSED (test data removed)' as result;
+
+===== END SCRIPT 4 =====
+
+===== BEGIN SCRIPT 5: 005_parent_takeovers.sql =====
+-- Family Chores: a parent picks up a chore/shift: for cash, as a penalty, or as a demonstration.
+-- Run after 001 (and 003). Safe to re-run. Ends with its own tests (test data removed).
+
+create table if not exists public.takeovers (
+  id uuid primary key default gen_random_uuid(),
+  family_id uuid not null references public.families(id) on delete cascade,
+  job_id uuid not null references public.jobs(id) on delete cascade,
+  occ date not null,
+  child_member uuid references public.members(id) on delete set null,   -- null = an unclaimed/open shift
+  parent_member uuid not null references public.members(id) on delete cascade,
+  reason text not null check (reason in ('cash','penalty','demo')),
+  penalty_id uuid references public.penalties(id) on delete set null,
+  note text check (char_length(note) <= 120),
+  created_at timestamptz not null default now(),
+  unique (job_id, occ)
+);
+alter table public.takeovers enable row level security;
+revoke all on public.takeovers from anon, authenticated;
+grant select on public.takeovers to authenticated;
+drop policy if exists take_read on public.takeovers;
+create policy take_read on public.takeovers for select to authenticated using (public.is_member_of(family_id));
+
+-- cash: chore moves to the parent, who earns its pay when scored.
+-- penalty: chore moves to the parent; the child gets a penalty (default = the job's pay).
+-- demo: parent shows how; the chore stays the child's; no money changes.
+create or replace function public.parent_takeover(job uuid, day date, child uuid, why text, penalty_cents integer default null, note text default null)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare j public.jobs; me uuid := public.my_member(); t uuid; pen uuid; amt int;
+begin
+  select * into j from public.jobs where id = job;
+  if j.id is null or not public.is_parent_of(j.family_id) then raise exception 'Only a parent can do this'; end if;
+  if why not in ('cash','penalty','demo') then raise exception 'Reason must be cash, penalty or demo'; end if;
+  if child is not null and not exists (select 1 from public.members where id = child and family_id = j.family_id and role = 'child') then
+    raise exception 'That child is not in this family'; end if;
+  if why = 'penalty' then
+    if child is null then raise exception 'A penalty needs a child'; end if;
+    amt := coalesce(penalty_cents, j.pay_cents);
+    if amt < 1 or amt > 100000 then raise exception 'Penalty must be between 0.01 and 1000'; end if;
+    insert into public.penalties(family_id, member_id, amount_cents, reason, created_by)
+      values (j.family_id, child, amt, left('Parent took over "' || j.name || '"' || coalesce(': ' || note, ''), 120), me)
+      returning id into pen;
+  end if;
+  insert into public.takeovers(family_id, job_id, occ, child_member, parent_member, reason, penalty_id, note)
+    values (j.family_id, job, day, child, me, why, pen, note)
+    on conflict (job_id, occ) do update set child_member = excluded.child_member, parent_member = excluded.parent_member,
+      reason = excluded.reason, penalty_id = excluded.penalty_id, note = excluded.note, created_at = now()
+    returning id into t;
+  perform public.log(j.family_id, 'takeover_' || why, jsonb_build_object('job', job, 'occ', day, 'child', child, 'penalty_cents', amt));
+  return t;
+end $$;
+
+-- Undo a takeover (and its penalty).
+create or replace function public.undo_takeover(takeover uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare t public.takeovers; begin
+  select * into t from public.takeovers where id = takeover;
+  if t.id is null or not public.is_parent_of(t.family_id) then raise exception 'Only a parent can do this'; end if;
+  if t.penalty_id is not null then delete from public.penalties where id = t.penalty_id; end if;
+  delete from public.takeovers where id = takeover;
+  perform public.log(t.family_id, 'takeover_undone', jsonb_build_object('takeover', takeover));
+end $$;
+
+revoke all on function public.parent_takeover(uuid,date,uuid,text,integer,text), public.undo_takeover(uuid) from public, anon;
+grant execute on function public.parent_takeover(uuid,date,uuid,text,integer,text), public.undo_takeover(uuid) to authenticated;
+
+-- ---------- tests ----------
+do $test$
+declare fa uuid := gen_random_uuid(); pa uuid := gen_random_uuid(); c1 uuid := gen_random_uuid(); c2 uuid := gen_random_uuid();
+  u_pa uuid := gen_random_uuid(); u_c1 uuid := gen_random_uuid(); u_c2 uuid := gen_random_uuid(); j uuid := gen_random_uuid();
+  t uuid; n int; ok boolean; passed int := 0;
+begin
+  insert into public.families(id, name) values (fa, 'TEST family T');
+  insert into public.settings(family_id) values (fa);
+  insert into public.members(id, family_id, user_id, display_name, role, age_group) values
+    (pa, fa, u_pa, 'TestParentT', 'parent', 'adult'), (c1, fa, u_c1, 'TestKidT1', 'child', 'teen'), (c2, fa, u_c2, 'TestKidT2', 'child', 'kid');
+  insert into public.jobs(id, family_id, name, pay_cents) values (j, fa, 'Test job T', 300);
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  ok := false; begin perform public.parent_takeover(j, current_date, c2, 'penalty'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child penalised a sibling'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pa, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  t := public.parent_takeover(j, current_date, c1, 'penalty', null, 'Not done to standard'); passed := passed + 1;
+  select count(*) into n from public.penalties where member_id = c1 and amount_cents = 300; if n <> 1 then raise exception 'FAIL: penalty not created at job pay'; end if; passed := passed + 1;
+  perform public.undo_takeover(t);
+  select count(*) into n from public.penalties where member_id = c1; if n <> 0 then raise exception 'FAIL: undo left the penalty'; end if; passed := passed + 1;
+  perform public.parent_takeover(j, current_date, c1, 'cash'); passed := passed + 1;
+  select count(*) into n from public.penalties; if n <> 0 then raise exception 'FAIL: cash takeover created a penalty'; end if; passed := passed + 1;
+  perform public.parent_takeover(j, current_date + 1, null, 'demo', null, 'Showing how'); passed := passed + 1;
+  ok := false; begin perform public.parent_takeover(j, current_date + 2, null, 'penalty'); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: penalty without a child accepted'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c2, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.takeovers; if n <> 2 then raise exception 'FAIL: family board shows % takeovers (want 2)', n; end if; passed := passed + 1;
+  select count(*) into n from public.penalties; if n <> 0 then raise exception 'FAIL: sibling sees penalties'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  delete from public.families where id = fa;
+  raise notice 'ALL % TAKEOVER TESTS PASSED', passed;
+end $test$;
+
+select 'Parent takeovers installed; ALL TAKEOVER TESTS PASSED (test data removed)' as result;
+
+===== END SCRIPT 5 =====
+
+===== BEGIN FUNCTION CODE: kid-login/index.ts =====
+// Supabase Edge Function: kid-login
+// A child signs in with username + password (+ this device's id). No email is ever used or sent.
+// Deploy with "Verify JWT" OFF (the child isn't signed in yet). Secrets come from the function's own
+// environment (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY); nothing secret is in this file.
+// Flow: kid_auth() checks password/lockout/device → (first time) create a hidden auth user with a
+// placeholder address on the reserved .invalid domain (never deliverable) → return a one-time sign-in
+// token the app exchanges for a normal session.
+
+const URL_ = Deno.env.get("SUPABASE_URL")!;
+const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ALLOWED_ORIGINS = ["https://lorneh12.github.io", "http://localhost:8080"];
+
+const cors = (origin: string | null) => ({
+  "Access-Control-Allow-Origin": origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+  "Access-Control-Allow-Headers": "content-type, apikey, authorization, x-client-info",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Vary": "Origin",
+});
+const admin = (path: string, init: RequestInit = {}) =>
+  fetch(`${URL_}${path}`, { ...init, headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, "Content-Type": "application/json", ...(init.headers || {}) } });
+
+Deno.serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const h = { ...cors(origin), "Content-Type": "application/json" };
+  if (req.method === "OPTIONS") return new Response("ok", { headers: h });
+  if (req.method !== "POST") return new Response(JSON.stringify({ error: "POST only" }), { status: 405, headers: h });
+  let body: { username?: string; password?: string; device_id?: string };
+  try { body = await req.json(); } catch { return new Response(JSON.stringify({ error: "Bad request" }), { status: 400, headers: h }); }
+  const username = String(body.username || "").slice(0, 20), password = String(body.password || "").slice(0, 40), device = String(body.device_id || "").slice(0, 64);
+  if (!username || !password) return new Response(JSON.stringify({ error: "Enter your username and password" }), { status: 400, headers: h });
+
+  const r = await admin("/rest/v1/rpc/kid_auth", { method: "POST", body: JSON.stringify({ uname: username, pass: password, device }) });
+  const rows = await r.json();
+  const row = Array.isArray(rows) ? rows[0] : null;
+  if (!row || row.error) return new Response(JSON.stringify({ error: row?.error || "Sign-in failed" }), { status: 401, headers: h });
+
+  const email = `kid-${row.member_id}@family-chores.invalid`;
+  let uid: string | null = row.user_id;
+  if (!uid) {
+    const cu = await admin("/auth/v1/admin/users", { method: "POST", body: JSON.stringify({
+      email, email_confirm: true, password: crypto.randomUUID() + crypto.randomUUID(), user_metadata: { kind: "child" } }) });
+    const u = await cu.json();
+    if (!cu.ok || !u.id) return new Response(JSON.stringify({ error: "Could not create the sign-in" }), { status: 500, headers: h });
+    uid = u.id;
+    await admin("/rest/v1/rpc/link_kid_user", { method: "POST", body: JSON.stringify({ member: row.member_id, uid }) });
+  }
+  // One-time token (no email is sent by generate_link).
+  const gl = await admin("/auth/v1/admin/generate_link", { method: "POST", body: JSON.stringify({ type: "magiclink", email }) });
+  const link = await gl.json();
+  const token_hash = link.hashed_token || link.properties?.hashed_token;
+  if (!gl.ok || !token_hash) return new Response(JSON.stringify({ error: "Could not sign in" }), { status: 500, headers: h });
+  return new Response(JSON.stringify({ token_hash }), { headers: h });
+});
+
+===== END FUNCTION CODE =====

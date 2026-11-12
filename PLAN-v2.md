@@ -69,3 +69,7 @@
 - External probe with the publishable key: visitor gets permission denied on tables and functions; anonymous unpaired phone sees empty results, cannot create a family, wrong pairing code rejected, pairing_codes table denied, photo list empty, uploads denied (RLS), no public photo URLs.
 - Two anonymous test sign-ins exist from the probe (no rights; can be deleted under Authentication → Users).
 - Next: connect the app (sign-in, family creation, pairing, jobs/tasks/rubric, photo proof, scoring, payouts), then publish with config injected from GitHub secrets.
+
+## Changes 2026-11-12 (later)
+- Children sign in with username + password set by a parent (no email, no device pairing); any device, website or app. kid-login Edge Function: bcrypt check, 5 wrong tries → 15-minute lock, optional per-child device restriction (parent-approved devices). Shared devices: "not my phone" = no remembered login; idle sign-out (default 30 min). Anonymous sign-ins no longer needed (turn off).
+- Parents can take over a chore/shift: cash (parent earns), penalty (child penalised, default = job pay, undoable), demo (stays the child's, no money). Audited, visible on the family board.
