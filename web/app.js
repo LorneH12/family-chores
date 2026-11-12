@@ -5,6 +5,10 @@ const ageLabel = a => (AGES.find(x => x[0] === a) || [, a])[1];
 const ctx = { me: null, family: null, members: [], settings: null, loaded: false };
 const money = c => new Intl.NumberFormat(undefined, { style: 'currency', currency: ctx.settings?.currency || 'USD' }).format((c || 0) / 100);
 const isParent = () => ctx.me?.role === 'parent';
+const isAdmin = () => isParent() && !!ctx.me?.is_admin;
+const weekStart = () => { const d = new Date(); d.setHours(12); d.setDate(d.getDate() - ((d.getDay() - (ctx.settings?.week_start || 0) + 7) % 7)); return d.toISOString().slice(0, 10); };
+const avatarOf = id => { const a = ctx.avatars?.[id]; const m = ctx.members.find(x => x.id === id) || {}; return a ? { ...a.config, personality: a.personality, name: a.nickname || m.display_name } : null; };
+const ROOM_ART = n => { n = (n || '').toLowerCase(); return n.includes('kitchen') ? 'kitchen' : n.includes('living') ? 'living-room' : n.includes('bath') ? 'main-bathroom' : n.includes('hall') ? 'hallway-and-entry' : n.includes('laundry') ? 'laundry' : n.includes('dining') ? 'dining-room' : n.includes('yard') || n.includes('outside') ? 'yard-and-outside' : n.includes('garage') ? 'garage' : n.includes('bedroom') ? 'bedroom' : n.includes('ready') ? 'getting-ready' : 'living-room'; };
 const app = () => $('#app');
 const busy = (btn, on) => { if (btn) { btn.disabled = on; btn.dataset.t = btn.dataset.t || btn.textContent; btn.textContent = on ? 'Please wait…' : btn.dataset.t; } };
 const fail = (where, e) => { const el = $(where); if (el) { el.className = 'err'; el.textContent = e.message || String(e); } };
@@ -17,9 +21,10 @@ async function loadContext() {
   if (!ctx.me) return true;
   const [fam, members, settings] = await Promise.all([
     API.select('families', `select=*&id=eq.${ctx.me.family_id}`),
-    API.select('members', `select=id,display_name,emoji,role,age_group,active,user_id,username,device_restricted&family_id=eq.${ctx.me.family_id}&order=role.desc,display_name`),
+    API.select('members', `select=id,display_name,emoji,role,age_group,active,user_id,username,device_restricted,is_admin,status,is_guest,guest_label,access_until&family_id=eq.${ctx.me.family_id}&order=role.desc,display_name`),
     API.select('settings', `select=*&family_id=eq.${ctx.me.family_id}`)]);
   ctx.family = fam[0]; ctx.members = members; ctx.settings = settings[0];
+  try { ctx.avatars = Object.fromEntries((await API.select('avatars', 'select=*')).map(a => [a.member_id, a])); } catch { ctx.avatars = {}; }
   return true;
 }
 
@@ -85,6 +90,7 @@ V.home = async () => {
   frame(`<h1>Hi ${E(ctx.me.display_name)}</h1>
 <p class="muted">${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}${bal !== null ? ` · balance <b>${money(bal)}</b>` : ''}</p>
 ${pole ? `<a class="card notice" href="#/board">🏆 Pole position this week: ${E(pole.emoji)} ${E(pole.display_name)} · ${pole.points} points</a>` : ''}
+${ctx.avatars[ctx.me.id] ? '' : '<a class="card notice" href="#/avatar">🎨 Make your avatar: it does your chores in the rooms</a>'}
 <div class="card"><h2>Your chores</h2><p class="muted">${isParent() ? 'Add jobs, tasks and the rubric in Setup → Jobs (coming next). Then each person sees their chores here.' : 'Your chores will show here once a parent adds the jobs.'}</p></div>
 ${isParent() && ctx.members.some(m => m.role === 'child' && !m.username) ? `<a class="card notice" href="#/setup">Set up logins for the children in Setup → People</a>` : ''}`);
 };
@@ -135,13 +141,58 @@ V.setup = async () => {
 <label>Children on shared devices: sign out after (minutes idle) <input name="idle" type="number" min="5" max="240" value="${st.kid_idle_minutes}"></label>
 <label>Currency <select name="cur">${['USD', 'CAD', 'GBP', 'EUR', 'AUD'].map(c => o(c, st.currency, c)).join('')}</select></label>
 <button class="btn">Save</button> <span id="smsg" role="status"></span></form></details>
-<p><a href="#/about">About, privacy &amp; usage</a></p>`);
+<details class="card" id="invites"><summary><h2>Invites &amp; requests</h2></summary><div id="invbox"><p class="muted">Loading…</p></div></details>
+<details class="card"><summary><h2>Money dials</h2></summary><form id="df" class="form">
+<label>Pay: % of listed prices <input name="pay" type="number" min="0" max="300" value="${st.pay_percent ?? 100}"></label>
+<label>Whole-room bonus % <input name="bon" type="number" min="0" max="300" value="${st.bonus_percent ?? 100}"></label>
+<label>Penalty % <input name="pen" type="number" min="0" max="300" value="${st.penalty_percent ?? 100}"></label>
+<label>Round pay to <select name="rnd">${[1, 5, 10, 25, 50, 100].map(c => `<option value="${c}" ${c === (st.round_to_cents ?? 5) ? 'selected' : ''}>${c === 1 ? 'exact cents' : c + '¢'}</option>`).join('')}</select></label>
+<button class="btn">Save dials</button> <span id="dmsg2" role="status"></span></form>
+<p class="muted">Each chore keeps its own price, minimum and maximum; the dials scale them all. Every price change is kept in the price history.</p></details>
+${isAdmin() ? `<details class="card"><summary><h2>Admin</h2></summary>
+<p id="starter"></p>
+<label class="chk"><input type="checkbox" id="aiv" ${st.ai_voice ? 'checked' : ''}> AI voice for avatars (optional; needs an AI key added in Supabase first)</label>
+<p class="muted">Off: avatars use the built-in voice, which still adapts to each person. Limits: ${st.ai_daily_lines ?? 20} lines per person a day, family cap $${((st.ai_monthly_cap_cents ?? 300) / 100).toFixed(2)} a month.</p><p id="aimsg" role="status"></p></details>` : ''}
+<p><a href="#/avatar">My avatar</a> · <a href="#/family">Family</a> · <a href="#/about">About, privacy &amp; usage</a></p>`);
   document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => personBox(b.dataset.edit));
+  invites();
+  $('#df').onsubmit = async e => { e.preventDefault(); const d = new FormData(e.target);
+    try { await API.update('settings', `family_id=eq.${ctx.family.id}`, { pay_percent: +d.get('pay'), bonus_percent: +d.get('bon'), penalty_percent: +d.get('pen'), round_to_cents: +d.get('rnd') });
+      await loadContext(); $('#dmsg2').className = 'ok'; $('#dmsg2').textContent = 'Saved.'; } catch (err) { fail('#dmsg2', err); } };
+  if (isAdmin()) {
+    const sp = $('#starter'); const n = (await API.select('rooms', 'select=id&limit=1')).length;
+    sp.innerHTML = n ? '<span class="muted">Starter rooms are loaded. Edit rooms and chores any time.</span>' : '<button class="btn" id="load">Load the starter rooms and chores</button> <span id="lmsg2" role="status"></span>';
+    const lb = $('#load'); if (lb) lb.onclick = async () => { busy(lb, true); try { const r = await API.rpc('load_starter_chores'); $('#lmsg2').className = 'ok'; $('#lmsg2').textContent = r; } catch (err) { fail('#lmsg2', err); } busy(lb, false); };
+    $('#aiv').onchange = async e => { try { await API.update('settings', `family_id=eq.${ctx.family.id}`, { ai_voice: e.target.checked }); await loadContext();
+      $('#aimsg').className = 'ok'; $('#aimsg').textContent = e.target.checked ? 'AI voice is on (until an AI key is added, avatars keep the built-in voice).' : 'AI voice is off.'; } catch (err) { e.target.checked = !e.target.checked; fail('#aimsg', err); } };
+  }
   $('#sf').onsubmit = async e => { e.preventDefault(); const d = new FormData(e.target);
     try { await API.update('settings', `family_id=eq.${ctx.family.id}`, { board_rank_by: d.get('rb'), board_parents: !!d.get('bp'), approve_swaps: !!d.get('as'),
       week_start: +d.get('ws'), kid_idle_minutes: Math.min(240, Math.max(5, +d.get('idle') || 30)), currency: d.get('cur') });
       await loadContext(); $('#smsg').className = 'ok'; $('#smsg').textContent = 'Saved.'; } catch (err) { fail('#smsg', err); } };
 };
+
+async function invites() {
+  const box = $('#invbox'); if (!box) return;
+  const pending = ctx.members.filter(m => m.status === 'pending');
+  const roles = isAdmin() ? [['caregiver', 'Caregiver (babysitter, helper)'], ['child', 'Visiting child'], ['parent', 'Parent']] : [['caregiver', 'Caregiver (babysitter, helper)'], ['child', 'Visiting child']];
+  box.innerHTML = `${pending.length ? `<h3>Waiting for approval</h3><ul class="list">${pending.map(m => `<li class="row"><span class="emo">${E(m.emoji)}</span><span class="grow"><b>${E(m.display_name)}</b><br><span class="muted">${E(m.guest_label || '')} · ${m.role}</span></span>
+<span class="acts"><button class="mini" data-ok="${m.id}">Approve</button><button class="mini alt" data-no="${m.id}">Decline</button></span></li>`).join('')}</ul>` : '<p class="muted">No one is waiting.</p>'}
+<h3>New invite</h3><form id="if" class="form"><label>Who is it for? <input name="label" maxlength="40" required placeholder="e.g. Babysitter Saturday"></label>
+<label>Role <select name="role">${roles.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
+<label>How long <select name="dur"><option value="one_off">One time</option><option value="temporary">From – to dates</option><option value="permanent">Permanent</option></select></label>
+<label>Starts <input name="from" type="datetime-local"></label><label>Ends (not needed for permanent) <input name="until" type="datetime-local"></label>
+<button class="btn">Make invite</button><p id="imsg" role="status"></p></form>`;
+  box.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => { await API.rpc('decide_member', { member: b.dataset.ok, approve: true }); await loadContext(); invites(); });
+  box.querySelectorAll('[data-no]').forEach(b => b.onclick = async () => { await API.rpc('decide_member', { member: b.dataset.no, approve: false }); await loadContext(); invites(); });
+  $('#if').onsubmit = async e => { e.preventDefault(); const d = new FormData(e.target), dur = d.get('dur');
+    const iso = v => v ? new Date(v).toISOString() : null;
+    try { const code = await API.rpc('create_invite', { role: d.get('role'), label: String(d.get('label')).trim(), duration: dur, access_from: iso(d.get('from')), access_until: dur === 'permanent' ? null : iso(d.get('until')) });
+      const link = location.origin + location.pathname, text = `You're invited to ${ctx.family.name} on Family Chores. Open ${link}, sign in with your email, choose "Join with an invite" and enter: ${code} (works once, for 3 days).`;
+      $('#imsg').innerHTML = `<span class="code">${E(code)}</span><br><button type="button" class="btn alt" id="share">Share invite</button>`;
+      $('#share').onclick = async () => { try { if (navigator.share) await navigator.share({ title: 'Family Chores invite', text }); else { await navigator.clipboard.writeText(text); $('#share').textContent = 'Copied: paste it into a text or email'; } } catch {} };
+    } catch (err) { fail('#imsg', err); } };
+}
 
 function personBox(id) {
   const m = id === 'new' ? { display_name: '', emoji: '🙂', role: 'child', age_group: 'kid' } : ctx.members.find(x => x.id === id);
@@ -173,6 +224,109 @@ ${id !== 'new' && m.role === 'parent' && !m.user_id ? `<h3>Invite</h3><p class="
   const inv = $('#inv'); if (inv) inv.onclick = async () => { try { $('#code').textContent = await API.rpc('create_pairing', { member: id }); } catch (err) { fail('#code', err); } };
   $('#pbox').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+
+// ---------- avatar creator ----------
+V.avatar = async () => {
+  const cur = ctx.avatars[ctx.me.id];
+  const cfg = Object.assign({ skin: Avatar.SKIN[3], hair: 'puffs', outfit: 'hoodie', size: ctx.me.role === 'parent' ? 1.08 : 0.95 }, cur?.config || {});
+  let personality = cur?.personality || 'cheerful', nickname = cur?.nickname || '';
+  const o = (list, v) => list.map(([k, l]) => `<option value="${k}" ${String(k) === String(v) ? 'selected' : ''}>${l}</option>`).join('');
+  frame(`<h1>Your avatar</h1><p class="muted">Your avatar does your chores in the rooms and talks to you in its own voice.</p>
+<div class="card" style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:center"><div id="prev" style="height:150px"></div>
+<div class="form" style="margin:0"><label>Nickname <input id="nn" maxlength="24" value="${E(nickname)}" placeholder="${E(ctx.me.display_name)}"></label>
+<label>Personality <select id="pp">${o(Voice.personalities.map(p => [p, p[0].toUpperCase() + p.slice(1)]), personality)}</select></label></div></div>
+<div class="card form"><div><b style="font-size:14px">Skin</b><div id="sk" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${Avatar.SKIN.map((c, i) => `<button type="button" aria-label="Skin tone ${i + 1}" aria-pressed="${c === cfg.skin}" data-c="${c}" style="width:40px;height:40px;border-radius:50%;background:${c};border:3px solid #fff;box-shadow:0 0 0 ${c === cfg.skin ? 3 : 1}px ${c === cfg.skin ? 'var(--t)' : '#bbb'}"></button>`).join('')}</div></div>
+<label>Hair <select id="hr">${o(Avatar.HAIR, cfg.hair)}</select></label><label>Outfit <select id="of">${o(Avatar.OUTFIT, cfg.outfit)}</select></label>
+<label>Size <select id="sz">${o(Avatar.SIZE, cfg.size)}</select></label>
+<button class="btn" id="save">Save my avatar</button><p id="amsg" role="status"></p></div>`);
+  const prev = () => { const b = $('#prev'); b.innerHTML = ''; const sv = Avatar.svg(cfg, 'Your avatar'); sv.style.height = '150px'; b.appendChild(sv);
+    $('#amsg').className = 'muted'; $('#amsg').textContent = Voice.say({ personality, outfit: cfg.outfit }, 'greet', { name: nickname || ctx.me.display_name }).text; };
+  document.querySelectorAll('#sk button').forEach(b => b.onclick = () => { cfg.skin = b.dataset.c; document.querySelectorAll('#sk button').forEach(x => { const on = x === b; x.setAttribute('aria-pressed', on); x.style.boxShadow = `0 0 0 ${on ? 3 : 1}px ${on ? 'var(--t)' : '#bbb'}`; }); prev(); });
+  $('#hr').onchange = e => { cfg.hair = e.target.value; prev(); }; $('#of').onchange = e => { cfg.outfit = e.target.value; prev(); };
+  $('#sz').onchange = e => { cfg.size = +e.target.value; prev(); }; $('#pp').onchange = e => { personality = e.target.value; prev(); };
+  $('#nn').oninput = e => { nickname = e.target.value; };
+  $('#save').onclick = async () => { const row = { member_id: ctx.me.id, family_id: ctx.family.id, config: cfg, personality, nickname: nickname.trim() || null };
+    try { await API.call('/rest/v1/avatars?on_conflict=member_id', { method: 'POST', body: row, headers: { Prefer: 'resolution=merge-duplicates,return=representation' } });
+      ctx.avatars[ctx.me.id] = row; $('#amsg').className = 'ok'; $('#amsg').textContent = Voice.say({ personality, outfit: cfg.outfit }, 'praise', { chore: 'your new look', room: 'this avatar' }).text; } catch (err) { fail('#amsg', err); } };
+  prev();
+};
+
+// ---------- rooms: the 3D wheel ----------
+V.rooms = async () => {
+  const [rooms, jobs, claims, acts] = await Promise.all([API.select('rooms', 'select=*&active=is.true&order=position'), API.select('jobs', 'select=id,room_id,name,pay_cents,freq,every_n,is_project&active=is.true'),
+    API.select('room_claims', `select=room_id,member_id&week_start=eq.${weekStart()}&status=eq.active`), API.select('activity', 'select=member_id,room_id')]);
+  if (!rooms.length) { frame(`<h1>Rooms</h1><div class="card"><p>No rooms yet.</p>${isAdmin() ? '<p><a class="btn" href="#/setup">Load the starter rooms in Setup</a></p>' : '<p class="muted">An admin can add rooms in Setup.</p>'}</div>`); return; }
+  const pct = (ctx.settings?.pay_percent ?? 100) / 100;
+  frame(`<h1>Rooms</h1><p class="muted">Spin to pick a room. Drag the front room to turn it.</p>
+<div class="wheel" id="wheel" tabindex="0" aria-label="Rooms wheel: up and down arrows spin, left and right turn the room"><div class="drum" id="drum"></div></div>
+<div class="wbtns"><button class="mini alt" id="wup" aria-label="Previous room">▲</button><button class="mini alt" id="wdn" aria-label="Next room">▼</button></div>
+<div class="card" id="rpanel" aria-live="polite"></div>`);
+  const N = rooms.length, STEP = 360 / N, R = Math.round(110 / Math.tan(Math.PI / Math.max(N, 3)));
+  const drum = $('#drum'); drum.style.transform = `translateZ(${-R}px)`;
+  let angle = 0, target = 0, frameN = 5, front = -1, live = true;
+  const cards = rooms.map((r, i) => { const b = document.createElement('button'); b.className = 'wcard'; b.setAttribute('aria-label', r.name);
+    b.innerHTML = `<span class="wart" style="background-image:url(rooms/${ROOM_ART(r.name)}.webp)"></span><span class="wtag">${E(r.emoji)} ${E(r.name)}</span>`;
+    b.onclick = () => (i === front ? (location.hash = '#/room/' + r.id) : spin(i)); drum.appendChild(b); return b; });
+  const spin = i => { const cur = Math.round(-target / STEP); let d = i - (((cur % N) + N) % N); if (d > N / 2) d -= N; if (d < -N / 2) d += N; target = -(cur + d) * STEP; };
+  const panel = r => {
+    const chores = jobs.filter(j => j.room_id === r.id && !j.is_project), claim = claims.find(c => c.room_id === r.id), here = acts.filter(a => a.room_id === r.id);
+    const who = claim ? ctx.members.find(m => m.id === claim.member_id) : null;
+    $('#rpanel').innerHTML = `<h2 style="margin-top:0">${E(r.emoji)} ${E(r.name)}</h2>
+<p class="muted">${money(Math.round(r.weekly_value_cents * pct))} a week · ${chores.length} chore${chores.length === 1 ? '' : 's'}${r.whole_bonus_cents ? ` · whole room +${money(Math.round(r.whole_bonus_cents * (ctx.settings?.bonus_percent ?? 100) / 100))}` : ''}</p>
+${who ? `<p>🏠 ${E(who.display_name)} has the whole room this week.</p>` : ''}${here.length ? `<p class="muted">Working here now: ${here.map(a => E(ctx.members.find(m => m.id === a.member_id)?.display_name || '')).join(', ')}</p>` : ''}
+<p><a class="btn" href="#/room/${r.id}">Open ${E(r.name)}</a></p>`; };
+  function loop() { if (!live || !document.getElementById('drum')) return;
+    angle += (target - angle) * 0.18; const f = ((Math.round(-angle / STEP) % N) + N) % N;
+    cards.forEach((c, i) => { let a = i * STEP + angle; a = ((a + 180) % 360 + 360) % 360 - 180; const vis = Math.max(0, 1 - Math.abs(a) / 95);
+      c.style.transform = `rotateX(${-a}deg) translateZ(${R}px) scale(${0.7 + 0.3 * vis})`; c.style.opacity = vis.toFixed(2); c.style.pointerEvents = vis > 0.3 ? 'auto' : 'none'; c.tabIndex = i === f ? 0 : -1;
+      c.firstChild.style.backgroundPosition = `${((i === f ? frameN : 5) / 11) * 100}% 0`; c.classList.toggle('front', i === f); });
+    if (f !== front) { front = f; panel(rooms[f]); } requestAnimationFrame(loop); }
+  let sy = null, sx = null, mode = null, st = 0, sf = 5; const w = $('#wheel');
+  w.onpointerdown = e => { sy = e.clientY; sx = e.clientX; mode = null; st = target; sf = frameN; };
+  w.onpointermove = e => { if (sy === null) return; const dy = e.clientY - sy, dx = e.clientX - sx; if (!mode && Math.hypot(dx, dy) > 8) mode = Math.abs(dy) > Math.abs(dx) ? 'spin' : 'turn';
+    if (mode === 'spin') target = st + dy * 0.35; if (mode === 'turn') frameN = Math.max(0, Math.min(11, Math.round(sf + dx / 18))); };
+  w.onpointerup = w.onpointercancel = () => { if (mode === 'spin') target = Math.round(target / STEP) * STEP; sy = null; mode = null; };
+  w.onwheel = e => { e.preventDefault(); target -= Math.sign(e.deltaY) * STEP; };
+  w.onkeydown = e => { if (e.key === 'ArrowDown') { target -= STEP; e.preventDefault(); } if (e.key === 'ArrowUp') { target += STEP; e.preventDefault(); }
+    if (e.key === 'ArrowLeft') frameN = Math.max(0, frameN - 1); if (e.key === 'ArrowRight') frameN = Math.min(11, frameN + 1); if (e.key === 'Enter') location.hash = '#/room/' + rooms[front].id; };
+  $('#wup').onclick = () => { target += STEP; }; $('#wdn').onclick = () => { target -= STEP; };
+  addEventListener('hashchange', () => { live = false; }, { once: true });
+  loop();
+};
+
+// ---------- one room: claim it, or pick chores ----------
+V.room = async id => {
+  const [rooms, jobs, claims, acts] = await Promise.all([API.select('rooms', `select=*&id=eq.${id}`), API.select('jobs', `select=*&room_id=eq.${id}&active=is.true&order=position`),
+    API.select('room_claims', `select=*&room_id=eq.${id}&week_start=eq.${weekStart()}`), API.select('activity', `select=*&room_id=eq.${id}`)]);
+  const r = rooms[0]; if (!r) { frame('<p>Room not found.</p>'); return; }
+  const pays = Object.fromEntries(await Promise.all(jobs.map(async j => [j.id, await API.rpc('effective_pay', { job: j.id }).catch(() => j.pay_cents)])));
+  const claim = claims.find(c => c.status === 'active'), mine = acts.find(a => a.member_id === ctx.me.id);
+  const me = avatarOf(ctx.me.id) || { outfit: 'hoodie', personality: 'cheerful', name: ctx.me.display_name };
+  const often = j => j.freq === 'daily' ? 'every day' : j.freq === 'weekly' ? 'weekly' : `every ${j.every_n} days`;
+  const RANK = { little: 0, kid: 1, teen: 2, adult: 3 }, canDo = j => RANK[ctx.me.age_group] >= RANK[j.min_age] && (ctx.me.role === 'child' || j.parents_in || j.is_project);
+  const bonus = Math.round(r.whole_bonus_cents * (ctx.settings?.bonus_percent ?? 100) / 100), pen = Math.round(r.whole_penalty_cents * (ctx.settings?.penalty_percent ?? 100) / 100);
+  frame(`<p class="muted"><a href="#/rooms">Rooms</a> › ${E(r.name)}</p><h1>${E(r.emoji)} ${E(r.name)}</h1>
+<div class="roomart" style="background-image:url(rooms/${ROOM_ART(r.name)}.webp)" role="img" aria-label="${E(r.name)}">${acts.map((a, i) => avatarOf(a.member_id) ? `<span class="here" style="left:${28 + i * 20}%" data-av="${a.member_id}"></span>` : '').join('')}</div>
+${ROOM_ART(r.name) === 'kitchen' ? '<p><a href="scene.html">Watch the kitchen scene (preview)</a></p>' : ''}
+${r.whole_bonus_cents ? `<div class="card">${claim ? `<p>🏠 <b>${E(ctx.members.find(m => m.id === claim.member_id)?.display_name || '')}</b> has the whole room this week: +${money(claim.bonus_cents)} if every chore is done, −${money(claim.penalty_cents)} if not.</p>`
+  : `<p><b>Take the whole room</b> this week: every chore below, plus a <b>${money(bonus)}</b> bonus. Miss one and it's ${money(pen)} off.</p>${ctx.me.role !== 'caregiver' ? '<button class="btn" id="claim">Claim the whole room</button>' : ''}`}<p id="cmsg" role="status"></p></div>` : ''}
+<h2>Chores</h2><ul class="list">${jobs.map(j => `<li class="row"><span class="emo" aria-hidden="true">${E(j.emoji)}</span><span class="grow"><b>${E(j.name)}</b><br>
+<span class="muted">${money(pays[j.id])} · ${often(j)}${j.is_project ? ' · project' : ''}${j.kind === 'personal' ? ' · private photo' : ''}</span></span>
+<span class="acts">${mine && mine.job_id === j.id ? '<span class="tag ok">Doing it</span>' : canDo(j) && ctx.me.role !== 'caregiver' ? `<button class="mini" data-do="${j.id}">I'll do it</button>` : ''}</span></li>`).join('') || '<li class="muted">No chores in this room yet.</li>'}</ul>
+<div id="timerbox"></div>`);
+  document.querySelectorAll('[data-av]').forEach(sp => { const av = avatarOf(sp.dataset.av); const sv = Avatar.svg(av, av.name); sv.style.height = '100%'; sp.appendChild(sv); });
+  const cb = $('#claim'); if (cb) cb.onclick = async () => { try { await API.rpc('claim_room', { room: r.id, week: weekStart() }); $('#cmsg').className = 'ok';
+    $('#cmsg').textContent = Voice.say({ personality: me.personality, outfit: me.outfit }, 'start', { chore: 'the whole ' + r.name.toLowerCase() }).text; setTimeout(() => V.room(id), 1600); } catch (err) { fail('#cmsg', err); } };
+  document.querySelectorAll('[data-do]').forEach(b => b.onclick = () => { const j = jobs.find(x => x.id === b.dataset.do);
+    $('#timerbox').innerHTML = `<div class="card form"><h3 style="margin:0">${E(j.name)}</h3><label>How long do you want? <select id="mins">${[5, 10, 15, 20, 30, 45, 60].map(m => `<option ${m === 15 ? 'selected' : ''}>${m}</option>`).join('')}</select></label>
+<button class="btn" id="go">Start the timer</button><p id="tmsg" role="status"></p></div>`; $('#timerbox').scrollIntoView({ behavior: 'smooth' });
+    $('#go').onclick = async () => { try {
+      await API.call('/rest/v1/activity?on_conflict=member_id', { method: 'POST', body: { member_id: ctx.me.id, family_id: ctx.family.id, room_id: r.id, job_id: j.id }, headers: { Prefer: 'resolution=merge-duplicates' } });
+      await API.rpc('start_timer', { job: j.id, minutes: +$('#mins').value }); $('#tmsg').className = 'ok';
+      $('#tmsg').textContent = Voice.say({ personality: me.personality, outfit: me.outfit }, 'start', { chore: j.name.toLowerCase() }).text; setTimeout(() => V.room(id), 1600);
+    } catch (err) { fail('#tmsg', err); } }; });
+};
 
 V.about = async () => {
   const rows = Object.entries(PWA.state.usage).sort((a, b) => b[1].minutes - a[1].minutes);
@@ -207,7 +361,7 @@ async function start() {
 PWA.init({
   key: 'family-chores-web-v1', defaults: {},
   home: guard(V.home),
-  routes: { board: guard(V.board), family: guard(V.family), money: guard(V.money), setup: guard(V.setup), about: guard(V.about),
+  routes: { board: guard(V.board), family: guard(V.family), money: guard(V.money), setup: guard(V.setup), about: guard(V.about), avatar: guard(V.avatar), rooms: guard(V.rooms), room: guard(V.room),
     signin: tab => (API.userId() ? PWA.go('#/') : signIn(tab || 'kid')) }
 });
 start();

@@ -59,17 +59,28 @@
   .auth{max-width:420px;margin:30px auto} .err{color:#a4262c;font-weight:600} .ok{color:#0b5a0b;font-weight:600}
   .who{font-size:13px;opacity:.9} .rankrow .pos{font:800 22px/1 Inter,system-ui;width:44px;text-align:center}
   .pole{background:linear-gradient(135deg,#fff8e1,#fff);border-color:#e8c547} .code{font:700 28px/1.2 ui-monospace,monospace;letter-spacing:.12em}
+  .wheel{position:relative;height:330px;perspective:1000px;overflow:hidden;touch-action:none;margin-top:6px;border-radius:16px;background:radial-gradient(110% 80% at 50% 30%,#fff7e6,#ffd9b8)}
+  .wheel .drum{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+  .wcard{position:absolute;left:-110px;top:-110px;width:220px;height:220px;border:0;background:none;padding:0;cursor:pointer;backface-visibility:hidden}
+  .wart{position:absolute;inset:0;background-repeat:no-repeat;background-size:1200% 100%}
+  .wtag{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);white-space:nowrap;background:#fff;border-radius:99px;padding:5px 12px;font-weight:800;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+  .wcard.front .wtag{background:var(--t);color:#fff}
+  .wbtns{display:flex;gap:8px;justify-content:center;margin:8px 0}
+  .roomart{position:relative;width:100%;max-width:420px;aspect-ratio:1/1;margin:0 auto;background-repeat:no-repeat;background-size:1200% 100%;background-position:45.45% 0}
+  .roomart .here{position:absolute;bottom:22%;width:22%;height:34%}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <a class="skip" href="#app">Skip to content</a>
-<header><b>Family Chores</b><nav class="hlinks" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/family" data-t="family">Family</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav><button id="install" hidden>Install app</button></header>
+<header><b>Family Chores</b><nav class="hlinks" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/rooms" data-t="rooms">Rooms</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav><button id="install" hidden>Install app</button></header>
 <div class="wrap"><aside id="side" aria-label="Menu"></aside><main id="app" tabindex="-1"></main></div>
-<nav class="tabs" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/family" data-t="family">Family</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav>
+<nav class="tabs" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/rooms" data-t="rooms">Rooms</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav>
 <script src="config.js"></script>
 <script src="api.js"></script>
 <script src="core.js"></script>
+<script src="avatar.js"></script>
+<script src="voice.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
