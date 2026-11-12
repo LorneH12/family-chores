@@ -73,3 +73,4 @@
 ## Changes 2026-11-12 (later)
 - Children sign in with username + password set by a parent (no email, no device pairing); any device, website or app. kid-login Edge Function: bcrypt check, 5 wrong tries → 15-minute lock, optional per-child device restriction (parent-approved devices). Shared devices: "not my phone" = no remembered login; idle sign-out (default 30 min). Anonymous sign-ins no longer needed (turn off).
 - Parents can take over a chore/shift: cash (parent earns), penalty (child penalised, default = job pay, undoable), demo (stays the child's, no money). Audited, visible on the family board.
+- Family scoreboard (positives only, everyone sees): jobs done, tasks done, money earned, points (sum of 1–5 task scores), rank with pole position; week / month / all time; rank by points (default), jobs or money; parents optional. Penalties, balances, payouts, low scores and photos stay private.

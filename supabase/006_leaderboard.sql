@@ -1,0 +1,103 @@
+-- Family Chores: the family scoreboard. Positives only, visible to everyone in the family:
+-- jobs completed, tasks completed, money EARNED, points and rank (pole position = rank 1).
+-- Never shown here: penalties, balances, payouts, individual low scores, photos.
+-- Run after 001 and 005. Safe to re-run. Ends with its own tests (test data removed).
+
+alter table public.settings add column if not exists board_rank_by text not null default 'points';
+alter table public.settings add column if not exists board_parents boolean not null default false;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'settings_board_rank_by') then
+    alter table public.settings add constraint settings_board_rank_by check (board_rank_by in ('points','jobs','money'));
+  end if;
+end $$;
+
+-- period: 'week' (since the family's week start), 'month', or 'all'
+create or replace function public.leaderboard(period text default 'week')
+returns table(member_id uuid, display_name text, emoji text, jobs_done integer, tasks_done integer,
+              earned_cents integer, points integer, rank integer)
+language plpgsql stable security definer set search_path = '' as $$
+#variable_conflict use_column
+declare fam uuid := public.my_family(); st public.settings; since timestamptz;
+begin
+  if fam is null then return; end if;
+  select * into st from public.settings where family_id = fam;
+  since := case period
+    when 'week' then (current_date - ((extract(dow from current_date)::int - st.week_start + 7) % 7))::timestamptz
+    when 'month' then date_trunc('month', now())
+    else '-infinity'::timestamptz end;
+  return query
+  with s as (
+    select sc.member_id as mid, count(*)::int as jobs,
+           coalesce(sum((select count(*) from jsonb_object_keys(sc.task_scores))), 0)::int as tasks,
+           coalesce(sum(sc.pay_cents), 0)::int as money,
+           coalesce(sum((select sum(v::int) from jsonb_each_text(sc.task_scores) as e(k, v))), 0)::int as pts
+    from public.scores sc
+    where sc.family_id = fam and sc.scored_at >= since
+    group by sc.member_id
+  ), b as (
+    select m.id, m.display_name, m.emoji, coalesce(s.jobs, 0) as jobs, coalesce(s.tasks, 0) as tasks,
+           coalesce(s.money, 0) as money, coalesce(s.pts, 0) as pts
+    from public.members m left join s on s.mid = m.id
+    where m.family_id = fam and m.active and (m.role = 'child' or st.board_parents)
+  )
+  select b.id, b.display_name, b.emoji, b.jobs, b.tasks, b.money, b.pts,
+         (rank() over (order by case st.board_rank_by when 'jobs' then b.jobs when 'money' then b.money else b.pts end desc))::int
+  from b
+  order by 8, b.display_name;
+end $$;
+revoke all on function public.leaderboard(text) from public, anon;
+grant execute on function public.leaderboard(text) to authenticated;
+
+-- ---------- tests ----------
+do $test$
+declare fa uuid := gen_random_uuid(); fb uuid := gen_random_uuid(); pa uuid := gen_random_uuid(); c1 uuid := gen_random_uuid(); c2 uuid := gen_random_uuid();
+  pb uuid := gen_random_uuid(); u_pa uuid := gen_random_uuid(); u_c1 uuid := gen_random_uuid(); u_c2 uuid := gen_random_uuid(); u_pb uuid := gen_random_uuid();
+  j uuid := gen_random_uuid(); s1 uuid := gen_random_uuid(); s2 uuid := gen_random_uuid(); s3 uuid := gen_random_uuid();
+  r record; n int; passed int := 0;
+begin
+  insert into public.families(id, name) values (fa, 'TEST family L'), (fb, 'TEST family M');
+  insert into public.settings(family_id) values (fa), (fb);
+  insert into public.members(id, family_id, user_id, display_name, role, age_group) values
+    (pa, fa, u_pa, 'TestParentL', 'parent', 'adult'), (c1, fa, u_c1, 'TestKidL1', 'child', 'teen'),
+    (c2, fa, u_c2, 'TestKidL2', 'child', 'little'), (pb, fb, u_pb, 'TestParentM', 'parent', 'adult');
+  insert into public.jobs(id, family_id, name, pay_cents) values (j, fa, 'Test job L', 500);
+  insert into public.submissions(id, family_id, job_id, member_id, occ) values
+    (s1, fa, j, c1, current_date), (s2, fa, j, c2, current_date - 1), (s3, fa, j, c2, current_date - 2);
+  -- teen: one job, 2 tasks scored 2+2 = 4 points, earns 250. little: two jobs scored 5+5 = 20 points, earns 1000.
+  insert into public.scores(submission_id, family_id, member_id, task_scores, job_rating, base_cents, percent, pay_cents) values
+    (s1, fa, c1, '{"a":2,"b":2}', 2, 500, 50, 250),
+    (s2, fa, c2, '{"a":5,"b":5}', 5, 500, 100, 500), (s3, fa, c2, '{"a":5,"b":5}', 5, 500, 100, 500);
+  insert into public.penalties(family_id, member_id, amount_cents, reason, created_by) values (fa, c2, 100, 'Test', pa);
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.leaderboard('all'); if n <> 2 then raise exception 'FAIL: board has % rows (want 2 children)', n; end if; passed := passed + 1;
+  select * into r from public.leaderboard('all') where rank = 1;
+  if r.member_id <> c2 or r.points <> 20 or r.jobs_done <> 2 or r.tasks_done <> 4 then raise exception 'FAIL: pole position wrong (%)', r; end if; passed := passed + 1;
+  if r.earned_cents <> 1000 then raise exception 'FAIL: earned shows % (want 1000, penalties never shown)', r.earned_cents; end if; passed := passed + 1;
+  select * into r from public.leaderboard('all') where member_id = c1;
+  if r.rank <> 2 or r.points <> 4 then raise exception 'FAIL: second place wrong (%)', r; end if; passed := passed + 1;
+  select count(*) into n from public.penalties; if n <> 0 then raise exception 'FAIL: scoreboard change exposed penalties'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  update public.settings set board_parents = true, board_rank_by = 'jobs' where family_id = fa;
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.leaderboard('all'); if n <> 3 then raise exception 'FAIL: parents not added when switched on'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pb, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.leaderboard('all') where display_name like 'TestKidL%'; if n <> 0 then raise exception 'FAIL: other family sees this scoreboard'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  perform set_config('request.jwt.claims', '', true);
+  execute 'set local role anon';
+  begin perform * from public.leaderboard('all'); raise exception 'FAIL: visitor can read the scoreboard'; exception when insufficient_privilege then passed := passed + 1; end;
+  execute 'reset role';
+
+  delete from public.families where id in (fa, fb);
+  raise notice 'ALL % SCOREBOARD TESTS PASSED', passed;
+end $test$;
+
+select 'Scoreboard installed; ALL SCOREBOARD TESTS PASSED (test data removed)' as result;
