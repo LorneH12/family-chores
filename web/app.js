@@ -41,16 +41,30 @@ ${tab === 'kid' ? `<form id="kf" class="form card">
     try { API.setShared(false); await API.sendParentLink(String(new FormData(pf).get('e')).trim()); $('#msg').className = 'ok'; $('#msg').textContent = 'Check your email for the sign-in link.'; } catch (err) { fail('#msg', err); } busy(b, false); };
 }
 
-function noMember() {
+async function noMember() {
+  let st = null; try { st = (await API.rpc('my_status'))[0] || null; } catch {}
+  if (st && st.status === 'pending') {
+    app().innerHTML = `<div class="auth"><h1>Almost there</h1><div class="card"><p>Your request to join${st.label ? ' as <b>' + E(st.label) + '</b>' : ''} is waiting for a parent to approve it.</p><p class="muted">Check back soon. This page updates when you open it again.</p></div><p><button class="btn alt" id="so">Sign out</button></p></div>`;
+    $('#so').onclick = async () => { await API.signOut(); start(); }; return;
+  }
+  if (st && (st.status === 'declined' || st.status === 'revoked' || (st.access_until && new Date(st.access_until) <= new Date()) || (st.access_from && new Date(st.access_from) > new Date()))) {
+    const soon = st.access_from && new Date(st.access_from) > new Date();
+    app().innerHTML = `<div class="auth"><h1>${soon ? 'Not open yet' : 'Access ended'}</h1><div class="card"><p>${soon ? 'Your access starts ' + new Date(st.access_from).toLocaleString() + '.' : 'Your access to this family has ended. Ask a parent if you need it again.'}</p></div><p><button class="btn alt" id="so">Sign out</button></p></div>`;
+    $('#so').onclick = async () => { await API.signOut(); start(); }; return;
+  }
   app().innerHTML = `<div class="auth"><h1>Welcome</h1>
-<div class="card"><h2>Join your family</h2><p class="muted">A parent can give you an invite code from Setup → People.</p>
-<form id="jf" class="form"><label>Invite code <input name="c" autocapitalize="characters" maxlength="12" required></label><button class="btn">Join</button><p id="jmsg" role="status"></p></form></div>
+<div class="card"><h2>Join with an invite</h2><p class="muted">A parent gives you an invite code. After you join, a parent approves you.</p>
+<form id="jf" class="form"><label>Invite code <input name="c" autocapitalize="characters" maxlength="12" required></label>
+<label>Your first name <input name="n" maxlength="24" required></label><label>Emoji <input name="m" maxlength="4" value="🙂"></label>
+<button class="btn">Join</button><p id="jmsg" role="status"></p></form></div>
 <details class="card"><summary><h2>First time: create the family</h2></summary>
 <form id="cf" class="form"><label>Family name <input name="f" maxlength="60" required></label>
 <label>Your first name <input name="n" maxlength="24" required></label><label>Emoji <input name="m" maxlength="4" value="🧑"></label>
-<button class="btn">Create family</button><p id="cmsg" role="status"></p></form><p class="muted">Only works once. Everyone else joins with a code.</p></details>
+<button class="btn">Create family</button><p id="cmsg" role="status"></p></form><p class="muted">Only works once. You become the admin. Everyone else joins with an invite.</p></details>
 <p><button class="btn alt" id="so">Sign out</button></p></div>`;
-  $('#jf').onsubmit = async e => { e.preventDefault(); try { await API.rpc('redeem_pairing', { code: new FormData(e.target).get('c') }); await start(); } catch (err) { fail('#jmsg', err); } };
+  $('#jf').onsubmit = async e => { e.preventDefault(); const d = new FormData(e.target);
+    try { await API.rpc('request_join', { code: d.get('c'), my_name: d.get('n'), my_emoji: d.get('m') || '🙂' }); await start(); }
+    catch (err) { try { await API.rpc('redeem_pairing', { code: d.get('c') }); await start(); } catch { fail('#jmsg', err); } } };
   $('#cf').onsubmit = async e => { e.preventDefault(); const d = new FormData(e.target);
     try { await API.rpc('create_family', { family_name: d.get('f'), my_name: d.get('n'), my_emoji: d.get('m') || '🧑' }); await start(); } catch (err) { fail('#cmsg', err); } };
   $('#so').onclick = async () => { await API.signOut(); start(); };
