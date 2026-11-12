@@ -1,0 +1,188 @@
+One more step for our family-chores Supabase project (after scripts 7, 8 and 9).
+
+RULES: run the SQL EXACTLY as written (no edits, no "fixes"); if it fails, stop and report the full error exactly. Never show or share any key, password or token. Change nothing else.
+
+STEP: SQL Editor → New query → paste SCRIPT 10 → Run.
+Expected: "Price dials, bulk price changes, avatars and live activity installed; ALL TESTS PASSED (test data removed)".
+
+Report back: the exact output, or the exact full error.
+
+===== BEGIN SCRIPT 10: 010_price_controls_avatars.sql =====
+-- Family Chores 010: global and individual price controls, and avatars.
+-- Pay actually earned = chore price × room % × family pay %  (bonuses × family bonus %, penalties × family penalty %).
+-- Prices stay as entered; the dials scale them, so you can change your mind without retyping anything.
+-- Run after 001–009. Safe to re-run. Ends with its own tests (test data removed).
+
+alter table public.settings add column if not exists pay_percent smallint not null default 100;
+alter table public.settings add column if not exists bonus_percent smallint not null default 100;
+alter table public.settings add column if not exists penalty_percent smallint not null default 100;
+alter table public.settings add column if not exists round_to_cents smallint not null default 5;
+alter table public.rooms add column if not exists pay_percent smallint not null default 100;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'settings_dials') then
+    alter table public.settings add constraint settings_dials check (pay_percent between 0 and 300 and bonus_percent between 0 and 300
+      and penalty_percent between 0 and 300 and round_to_cents in (1, 5, 10, 25, 50, 100)); end if;
+  if not exists (select 1 from pg_constraint where conname = 'rooms_pay_percent') then
+    alter table public.rooms add constraint rooms_pay_percent check (pay_percent between 0 and 300); end if;
+end $$;
+
+-- What a chore really pays right now (rounded to the family's rounding step).
+create or replace function public.effective_pay(job uuid) returns integer
+language sql stable security definer set search_path = '' as $$
+  select (round(j.pay_cents * s.pay_percent / 100.0 * coalesce(r.pay_percent, 100) / 100.0 / s.round_to_cents) * s.round_to_cents)::int
+  from public.jobs j join public.settings s on s.family_id = j.family_id left join public.rooms r on r.id = j.room_id
+  where j.id = job and public.is_member_of(j.family_id) $$;
+
+-- approve_scores now pays the effective (dialled) price
+create or replace function public.approve_scores(sub uuid, task_scores jsonb, feedback text default null, ai_used boolean default false)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare s public.submissions; base int; total numeric := 0; wsum numeric := 0; t record; sc int; rating numeric; pct int; pay int;
+begin
+  select * into s from public.submissions where id = sub;
+  if s.id is null or not public.is_parent_of(s.family_id) then raise exception 'Only a parent can do this'; end if;
+  base := public.effective_pay(s.job_id);
+  for t in select id, weight from public.tasks where job_id = s.job_id loop
+    sc := (task_scores ->> t.id::text)::int;
+    if sc is null or sc < 1 or sc > 5 then raise exception 'Every task needs a score from 1 to 5'; end if;
+    total := total + sc * t.weight; wsum := wsum + t.weight;
+  end loop;
+  if wsum = 0 then raise exception 'This job has no tasks'; end if;
+  rating := round(total / wsum, 2);
+  select percent into pct from public.pay_scale where family_id = s.family_id and score = round(rating)::int;
+  pay := round(base * coalesce(pct, 0) / 100.0);
+  insert into public.scores(submission_id, family_id, member_id, task_scores, job_rating, base_cents, percent, pay_cents, feedback, ai_used, scored_by)
+    values (sub, s.family_id, s.member_id, task_scores, rating, base, coalesce(pct, 0), pay, feedback, ai_used, public.my_member())
+    on conflict (submission_id) do update set task_scores = excluded.task_scores, job_rating = excluded.job_rating, base_cents = excluded.base_cents,
+      percent = excluded.percent, pay_cents = excluded.pay_cents, feedback = excluded.feedback, ai_used = excluded.ai_used, scored_by = excluded.scored_by, scored_at = now();
+  update public.submissions set status = 'approved' where id = sub;
+  perform public.log(s.family_id, 'scores_approved', jsonb_build_object('submission', sub, 'rating', rating, 'pay_cents', pay));
+  return pay;
+end $$;
+
+-- whole-room claims use the bonus/penalty dials at claim time
+create or replace function public.claim_room(room uuid, week date, member uuid default null) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare r public.rooms; st public.settings; who uuid; me public.members; c uuid; src text;
+begin
+  select * into r from public.rooms where id = room and active;
+  if r.id is null or not public.is_member_of(r.family_id) then raise exception 'Not found'; end if;
+  select * into st from public.settings where family_id = r.family_id;
+  select * into me from public.members where id = public.my_member();
+  if me.role = 'caregiver' then raise exception 'Caregivers can''t claim rooms'; end if;
+  if r.whole_bonus_cents = 0 then raise exception 'This room''s chores are done one at a time'; end if;
+  who := coalesce(member, me.id);
+  if who <> me.id and not public.is_parent_of(r.family_id) then raise exception 'Only a parent can assign a room to someone else'; end if;
+  if not exists (select 1 from public.members where id = who and family_id = r.family_id and role in ('child','parent')) then raise exception 'Not in this family'; end if;
+  src := case when who = me.id then 'picked' else 'assigned' end;
+  insert into public.room_claims(family_id, room_id, week_start, member_id, source, bonus_cents, penalty_cents)
+    values (r.family_id, room, week, who, src, round(r.whole_bonus_cents * st.bonus_percent / 100.0), round(r.whole_penalty_cents * st.penalty_percent / 100.0))
+    returning id into c;
+  perform public.log(r.family_id, 'room_claimed', jsonb_build_object('room', room, 'week', week, 'member', who, 'source', src));
+  return c;
+exception when unique_violation then raise exception 'Someone already has this room this week';
+end $$;
+
+-- Bulk change (permanent): scale stored prices for the whole family, one room, or one chore; keeps each chore inside its min/max.
+create or replace function public.bulk_price_change(percent integer, room uuid default null, job uuid default null, reason text default null)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare fam uuid := public.my_family(); n int;
+begin
+  if fam is null or not public.is_parent_of(fam) then raise exception 'Only a parent can change prices'; end if;
+  if percent < 10 or percent > 300 then raise exception 'Use a percentage between 10 and 300'; end if;
+  perform set_config('fc.price_reason', left(coalesce(reason, 'Bulk change to ' || percent || '%'), 200), true);
+  update public.jobs j set pay_cents = least(coalesce(j.max_pay_cents, 100000), greatest(coalesce(j.min_pay_cents, 0), round(j.pay_cents * percent / 100.0)::int))
+   where j.family_id = fam and (room is null or j.room_id = room) and (job is null or j.id = job);
+  get diagnostics n = row_count;
+  perform public.log(fam, 'bulk_price_change', jsonb_build_object('percent', percent, 'room', room, 'job', job, 'chores', n));
+  return n;
+end $$;
+
+revoke all on function public.effective_pay(uuid), public.bulk_price_change(integer,uuid,uuid,text) from public, anon;
+grant execute on function public.effective_pay(uuid), public.bulk_price_change(integer,uuid,uuid,text) to authenticated;
+
+-- ---------- avatars (cartoon, built from parts; never from photos) ----------
+create table if not exists public.avatars (
+  member_id uuid primary key references public.members(id) on delete cascade,
+  family_id uuid not null references public.families(id) on delete cascade,
+  config jsonb not null default '{}',          -- body, skin, hair, outfit, accessory, colours
+  personality text not null default 'cheerful' check (personality in ('cheerful','goofy','chill','hype','bossy','shy','dramatic')),
+  nickname text check (char_length(nickname) <= 24),
+  updated_at timestamptz not null default now(),
+  check (pg_column_size(config) < 4000)
+);
+alter table public.avatars enable row level security;
+revoke all on public.avatars from anon, authenticated;
+grant select, insert, update on public.avatars to authenticated;
+drop policy if exists av_read on public.avatars; drop policy if exists av_write on public.avatars; drop policy if exists av_update on public.avatars;
+create policy av_read on public.avatars for select to authenticated using (public.is_member_of(family_id));
+create policy av_write on public.avatars for insert to authenticated with check (public.is_member_of(family_id) and (member_id = public.my_member() or public.is_parent_of(family_id))
+  and family_id = (select m.family_id from public.members m where m.id = member_id));
+create policy av_update on public.avatars for update to authenticated using (member_id = public.my_member() or public.is_parent_of(family_id))
+  with check (family_id = (select m.family_id from public.members m where m.id = member_id));
+
+-- What everyone is doing right now (so the room scene can show two people in the same room).
+create table if not exists public.activity (
+  member_id uuid primary key references public.members(id) on delete cascade,
+  family_id uuid not null references public.families(id) on delete cascade,
+  room_id uuid references public.rooms(id) on delete set null,
+  job_id uuid references public.jobs(id) on delete set null,
+  task_id uuid references public.tasks(id) on delete set null,
+  updated_at timestamptz not null default now()
+);
+alter table public.activity enable row level security;
+revoke all on public.activity from anon, authenticated;
+grant select, insert, update, delete on public.activity to authenticated;
+drop policy if exists act_read on public.activity; drop policy if exists act_write on public.activity;
+create policy act_read on public.activity for select to authenticated using (public.is_member_of(family_id));
+create policy act_write on public.activity for all to authenticated using (member_id = public.my_member()) with check (member_id = public.my_member() and family_id = public.my_family());
+
+-- ---------- tests ----------
+do $test$
+declare fa uuid := gen_random_uuid(); pa uuid := gen_random_uuid(); c1 uuid := gen_random_uuid(); c2 uuid := gen_random_uuid();
+  u_pa uuid := gen_random_uuid(); u_c1 uuid := gen_random_uuid(); u_c2 uuid := gen_random_uuid();
+  r uuid := gen_random_uuid(); j uuid := gen_random_uuid(); t1 uuid := gen_random_uuid(); s1 uuid := gen_random_uuid();
+  pay int; n int; ok boolean; passed int := 0;
+begin
+  insert into public.families(id, name) values (fa, 'TEST family D');
+  insert into public.settings(family_id) values (fa);
+  insert into public.pay_scale(family_id, score, percent) values (fa,5,100),(fa,4,90),(fa,3,75),(fa,2,50),(fa,1,0);
+  insert into public.members(id, family_id, user_id, display_name, role, age_group, is_admin) values
+    (pa, fa, u_pa, 'TestAdminD', 'parent', 'adult', true), (c1, fa, u_c1, 'TestChildD1', 'child', 'teen', false), (c2, fa, u_c2, 'TestChildD2', 'child', 'kid', false);
+  insert into public.rooms(id, family_id, name, whole_bonus_cents, whole_penalty_cents) values (r, fa, 'Test room', 1000, 1500);
+  insert into public.jobs(id, family_id, room_id, name, pay_cents, min_pay_cents, max_pay_cents) values (j, fa, r, 'Test chore', 400, 200, 600);
+  insert into public.tasks(id, job_id, family_id, name) values (t1, j, fa, 'Test task');
+  insert into public.submissions(id, family_id, job_id, member_id, occ) values (s1, fa, j, c1, current_date);
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_pa, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  update public.settings set pay_percent = 50 where family_id = fa;
+  if public.effective_pay(j) <> 200 then raise exception 'FAIL: family 50%% gives %', public.effective_pay(j); end if; passed := passed + 1;
+  update public.rooms set pay_percent = 150 where id = r;
+  if public.effective_pay(j) <> 300 then raise exception 'FAIL: family 50%% × room 150%% gives %', public.effective_pay(j); end if; passed := passed + 1;
+  pay := public.approve_scores(s1, jsonb_build_object(t1::text, 5)); if pay <> 300 then raise exception 'FAIL: approved pay % (want 300)', pay; end if; passed := passed + 1;
+  n := public.bulk_price_change(200, r); if n <> 1 then raise exception 'FAIL: bulk change touched %', n; end if; passed := passed + 1;
+  select pay_cents into n from public.jobs where id = j; if n <> 600 then raise exception 'FAIL: bulk 200%% should cap at max 600, got %', n; end if; passed := passed + 1;
+  select count(*) into n from public.price_history where job_id = j and reason like 'Bulk change%'; if n <> 1 then raise exception 'FAIL: bulk change not in price history'; end if; passed := passed + 1;
+  insert into public.avatars(member_id, family_id, config, personality) values (c2, fa, '{"outfit":"bear"}', 'goofy'); passed := passed + 1;   -- parent makes a child's avatar
+  execute 'reset role';
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_c1, 'role', 'authenticated')::text, true); execute 'set local role authenticated';
+  ok := false; begin perform public.bulk_price_change(300); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child changed prices'; end if; passed := passed + 1;
+  update public.settings set pay_percent = 300 where family_id = fa; get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: a child changed the pay dial'; end if; passed := passed + 1;
+  insert into public.avatars(member_id, family_id, config, personality) values (c1, fa, '{"outfit":"gym"}', 'hype'); passed := passed + 1;
+  ok := false; begin update public.avatars set personality = 'shy' where member_id = c2; get diagnostics n = row_count; if n = 0 then ok := true; end if; exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child changed a sibling avatar'; end if; passed := passed + 1;
+  insert into public.activity(member_id, family_id, room_id, job_id) values (c1, fa, r, j); passed := passed + 1;
+  ok := false; begin insert into public.activity(member_id, family_id, room_id) values (c2, fa, r); exception when others then ok := true; end;
+  if not ok then raise exception 'FAIL: a child set a sibling activity'; end if; passed := passed + 1;
+  select count(*) into n from public.avatars; if n <> 2 then raise exception 'FAIL: family avatars not visible'; end if; passed := passed + 1;
+  execute 'reset role';
+
+  delete from public.families where id = fa;
+  raise notice 'ALL % PRICE/AVATAR TESTS PASSED', passed;
+end $test$;
+
+select 'Price dials, bulk price changes, avatars and live activity installed; ALL TESTS PASSED (test data removed)' as result;
+
+===== END SCRIPT 10 =====

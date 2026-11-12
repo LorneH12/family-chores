@@ -61,10 +61,10 @@ def kitchen():
     box((0.8, 0.8, 2.1), (-1.45, 1.45, 1.05), "steel")              # fridge
     box((0.7, 0.5, 0.06), (0.2, 1.45, 1.1), "steel", 0.02)          # sink
     for x in (0.9, 1.25): cyl(0.13, 0.03, (x, 1.35, 1.1), "dark")   # hob rings
-    box((0.8, 1.6, 0.9), (0.4, -0.2, 0.45), "wood")                 # island
-    box((0.9, 1.7, 0.07), (0.4, -0.2, 0.93), "white")
-    ball(0.12, (0.2, -0.4, 1.08), "coral"); ball(0.1, (0.45, -0.1, 1.06), "sun"); ball(0.11, (0.55, -0.6, 1.07), "leaf")
-    for y in (-0.7, 0.3): cyl(0.18, 0.6, (1.25, y, 0.3), "coral")   # stools
+    box((0.8, 1.6, 0.9), (-0.9, -0.9, 0.45), "wood")                # island (front-left, clear of the sink)
+    box((0.9, 1.7, 0.07), (-0.9, -0.9, 0.93), "white")
+    ball(0.12, (-1.1, -1.1, 1.08), "coral"); ball(0.1, (-0.85, -0.8, 1.06), "sun"); ball(0.11, (-0.75, -1.3, 1.07), "leaf")
+    for y in (-1.4, -0.4): cyl(0.18, 0.6, (-0.2, y, 0.3), "coral")  # stools
 def living_room():
     shell(wall="cream")
     box((3.0, 2.4, 0.04), (0.3, -0.1, 0.02), "lilac", 0.02)         # rug
