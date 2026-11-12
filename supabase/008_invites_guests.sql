@@ -233,7 +233,8 @@ declare m public.members; begin
   if m.id is null or not public.is_parent_of(m.family_id) then raise exception 'Only a parent can do this'; end if;
   if m.id = public.my_member() then raise exception 'You can''t revoke yourself'; end if;
   if m.role = 'parent' and not public.is_admin_of(m.family_id) then raise exception 'Only an admin can revoke a parent'; end if;
-  update public.members set status = 'revoked', access_until = now() where id = member;
+  update public.members set status = 'revoked',
+    access_until = case when access_from is null or access_from < now() then now() else access_until end where id = member;
   perform public.log(m.family_id, 'access_revoked', jsonb_build_object('member', member));
 end $$;
 
@@ -312,7 +313,7 @@ begin
   execute 'reset role';
 
   -- when the window closes, access ends by itself
-  update public.members set access_until = now() - interval '1 minute' where id = sit;
+  update public.members set access_from = now() - interval '1 hour', access_until = now() - interval '1 minute' where id = sit;
   perform set_config('request.jwt.claims', json_build_object('sub', u_sit, 'role', 'authenticated', 'is_anonymous', false)::text, true); execute 'set local role authenticated';
   select count(*) into n from public.jobs; if n <> 0 then raise exception 'FAIL: expired guest still sees jobs'; end if; passed := passed + 1;
   execute 'reset role';
