@@ -62,3 +62,10 @@
 5. Payouts: methods per job and child, Pay links, invoices, receipts.
 6. Notifications.
 7. Developer review (full: COPPA design, privacy notice, OWASP ASVS L2 with accounts, WCAG), penetration-style tests of the security rules, then publish.
+
+## Status 2026-11-12
+- Schema + RLS installed in Supabase (001_schema.sql): "Family Chores schema installed".
+- 40-check SQL security test (002): ALL SECURITY TESTS PASSED (test data removed).
+- External probe with the publishable key: visitor gets permission denied on tables and functions; anonymous unpaired phone sees empty results, cannot create a family, wrong pairing code rejected, pairing_codes table denied, photo list empty, uploads denied (RLS), no public photo URLs.
+- Two anonymous test sign-ins exist from the probe (no rights; can be deleted under Authentication → Users).
+- Next: connect the app (sign-in, family creation, pairing, jobs/tasks/rubric, photo proof, scoring, payouts), then publish with config injected from GitHub secrets.
