@@ -81,3 +81,4 @@
 - Roles by relation, not age: Parents and Children ("Children", never "Kids"); age group only decides chore suitability. Admin flag (family creator; only admins change admins).
 - Parent-to-parent tasks and events (PTA, car maintenance…) with money / gift / other rewards; visible to parents only (RLS); never on the scoreboard.
 - Scoreboard visibility: Everyone or Parents only, plus per-person allow/deny; parents always see; enforced in the database.
+- Invites and guests (008): parent/admin invites for parent (admin only), caregiver (babysitter: chores and board, no money/scores/photos/parent tasks) or child; permanent / temporary / one-off; code once, expires (72 h default); joiner is PENDING until a parent/admin approves (can change role and dates); access ends automatically at the window end; revoke any time. Visiting children (no email): parent creates them with username/password and dates; off the scoreboard unless added; earning optional.
