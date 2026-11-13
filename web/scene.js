@@ -7,6 +7,7 @@ const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS,
 const rnd = a => a[Math.floor(Math.random() * a.length)];
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const LIVE_ROOM = new URLSearchParams(location.search).get('room');          // set → live mode (real family data, see scene-live.js)
 
 // ---------- projection (orthographic camera of the Blender rooms, angle 05) ----------
 const CAM = [9.5, -9.5, 8.9], PX = 480 / 6.4, RIGHT = [0.7071, 0.7071, 0], UP = [-0.3747, 0.3747, 0.848], TH = -2 * Math.PI / 180, ROOTZ = -0.75;
@@ -116,7 +117,7 @@ function sparkle(x, y, n = 12, col = '#ffc857') {
 const agents = []; let nextId = 1;
 const doneTasks = new Set();
 function addAgent(cfg) {
-  if (agents.length >= 5) return;
+  if (agents.length >= (LIVE_ROOM ? 8 : 5)) return;
   const id = nextId++, filter = el('filter', { id: 'tired' + id }, defs), cm = el('feColorMatrix', { type: 'saturate', values: 1 }, filter);
   const v = Avatar.draw(actors, cfg); v.root.setAttribute('filter', `url(#tired${id})`); v.root.style.cursor = 'grab';
   const a = { id, cfg, v, cm, x: 0, y: -1.5, z: 0, vx: 0, vy: 0, vz: 0, mass: 0.6 + cfg.size * cfg.size, r: 0.2 * cfg.size + 0.08,
@@ -129,6 +130,7 @@ function addAgent(cfg) {
   if (a.state !== 'sleep') startNext(a); else renderPeople();
 }
 const current = a => a.cur && TASK[a.cur];
+function removeAgent(a) { const i = agents.indexOf(a); if (i >= 0) agents.splice(i, 1); a.v.root.remove(); renderPeople(); }
 function startTask(a, key, msg = true) {                     // the ONLY way a task becomes current (one at a time)
   a.cur = key; a.dest = null; const t = TASK[key];
   a.startedAt = clockNow(); a.plannedEnd = a.startedAt + t.minutes * 60000; a.warned8h = false; a.bestD = 9; a.stuckT = 0;
@@ -137,7 +139,7 @@ function startTask(a, key, msg = true) {                     // the ONLY way a t
   if (msg) say(a, V(a, 'start', { chore: t.name.toLowerCase() }));
   renderPeople();
 }
-function startNext(a) { const key = a.plan.find(k => !doneTasks.has(k)); if (key) startTask(a, key); else freeTime(a); }
+function startNext(a) { const key = a.plan.find(k => !doneTasks.has(k)); if (key) startTask(a, key); else if (a.cfg.stay) { a.cur = null; a.state = 'idle'; setTool(a, null); renderPeople(); } else freeTime(a); }
 // ---------- free time: chores finished → bonuses unlock, then out of the house for a while, or bed ----------
 let OUT_MS = 20000;                                        // prototype: "a while" = 20 seconds
 const isNight = () => { const h = new Date(clockNow()).getHours(); return h >= 20 || h < 6; };
@@ -292,13 +294,13 @@ if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.request
 let last = performance.now(), lastPanel = 0;
 function tick(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  for (const a of agents) {
+  for (const a of [...agents]) {
     a.phase += dt * 6; a.t += dt; const t = current(a), f = fatigue(a), speed = 0.9 * (0.75 + a.cfg.size * 0.25) * (1 - 0.6 * f);
     if (a.state === 'sleep') a.z = ROOMS.bedroom.bed[2];
     if (a.state === 'wake') { a.z = ROOMS.bedroom.bed[2]; if (a.t > 0.8 && !a.yawned) { a.yawned = 1; say(a, V(a, 'wakeup', {})); } if (a.t > 2.6) { a.state = 'hop'; a.vz = 2.8; a.vx = -1.3; a.vy = -1.0; a.t = 0; } }
-    if (a.state === 'out') { if (now > a.outUntil) { a.room = 'kitchen'; [a.x, a.y] = ROOMS.kitchen.door; a.state = 'walk'; a.target = [0.55, -0.6]; a.bestD = 9; a.refreshed = clockNow();
+    if (a.state === 'out') { if (a.gone) { removeAgent(a); continue; } if (now > a.outUntil) { a.room = 'kitchen'; [a.x, a.y] = ROOMS.kitchen.door; a.state = 'walk'; a.target = [0.55, -0.6]; a.bestD = 9; a.refreshed = clockNow();
         a.dest = { room: 'kitchen', spot: [0.55, -0.6], then: 'home' }; say(a, V(a, 'home', {})); renderPeople(); } pose(a, now, 0); continue; }
-    if (a.state === 'idle' && a.t > 6 && !a.cur && a.plan.length === 0) { a.t = 0; goBed(a); }
+    if (a.state === 'idle' && a.t > 6 && !a.cur && a.plan.length === 0 && !a.cfg.stay) { a.t = 0; goBed(a); }
     if (a.state === 'hop' && a.z === 0 && a.t > 0.4) { a.state = 'stretch'; a.t = 0; }
     if (a.state === 'stretch' && a.t > 1.6) startNext(a);
     if (a.state === 'walk' || a.state === 'leaving') {
@@ -382,7 +384,7 @@ function toast(a, msg) {
 }
 let nudgeT = 30;
 setInterval(() => { if (--nudgeT > 0) return; nudgeT = 40;        // reminders are about the task you're on
-  const a = agents.find(x => x.cur && x.room === view && x.state === 'work'); if (!a) return; const t = current(a);
+  const a = agents.find(x => x.cur && x.room === view && x.state === 'work' && (!LIVE_ROOM || x.cfg.stay)); if (!a) return; const t = current(a);
   const left = Math.round((a.plannedEnd - clockNow()) / 60000);
   toast(a, V(a, 'nudge', { chore: t.name.toLowerCase(), when: left > 0 ? `the next ${left} minutes` : 'now' }, false)); }, 1000);
 
@@ -429,7 +431,10 @@ document.getElementById('reset').onclick = () => { for (const k in level) delete
   PRESETS.slice(2).forEach(cfg => { const b = document.createElement('button'); b.className = 'pick'; b.setAttribute('aria-label', 'Add ' + cfg.name);
     b.appendChild(Avatar.svg(cfg, cfg.name)); b.appendChild(document.createTextNode(cfg.name)); b.onclick = () => addAgent({ ...cfg }); box.appendChild(b); }); })();
 
-drawRoom();
-addAgent({ ...PRESETS[0] }); addAgent({ ...PRESETS[1] });
-setTimeout(() => { const a = agents[0]; if (a.state === 'sleep') { a.state = 'wake'; a.t = 0; } }, 2500);   // Bear Cub's alarm goes off
+if (!LIVE_ROOM) {
+  drawRoom();
+  addAgent({ ...PRESETS[0] }); addAgent({ ...PRESETS[1] });
+  setTimeout(() => { const a = agents[0]; if (a.state === 'sleep') { a.state = 'wake'; a.t = 0; } }, 2500);   // Bear Cub's alarm goes off
+}
 requestAnimationFrame(tick);
+window.SceneState = { agents, level, TASK, ROOMS };   // read by the app's tests (same objects, not copies)

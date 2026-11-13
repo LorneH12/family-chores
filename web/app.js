@@ -10,6 +10,18 @@ const weekStart = () => { const d = new Date(); d.setHours(12); d.setDate(d.getD
 const avatarOf = id => { const a = ctx.avatars?.[id]; const m = ctx.members.find(x => x.id === id) || {}; return a ? { ...a.config, personality: a.personality, name: a.nickname || m.display_name } : null; };
 const ROOM_ART = n => { n = (n || '').toLowerCase(); return n.includes('kitchen') ? 'kitchen' : n.includes('living') ? 'living-room' : n.includes('bath') ? 'main-bathroom' : n.includes('hall') ? 'hallway-and-entry' : n.includes('laundry') ? 'laundry' : n.includes('dining') ? 'dining-room' : n.includes('yard') || n.includes('outside') ? 'yard-and-outside' : n.includes('garage') ? 'garage' : n.includes('bedroom') ? 'bedroom' : n.includes('ready') ? 'getting-ready' : 'living-room'; };
 const app = () => $('#app');
+const later = (fn, ms) => { const h = location.hash; setTimeout(() => { if (location.hash === h) fn(); }, ms); };   // re-render only if still on that page
+const today = () => new Date().toLocaleDateString('en-CA');                  // local YYYY-MM-DD
+const SCENES = n => /kitchen|bed/i.test(n || '');                           // rooms with a live scene so far
+const myVoice = () => { const a = avatarOf(ctx.me.id) || { outfit: 'hoodie', personality: 'cheerful' }; return { personality: a.personality, outfit: a.outfit }; };
+const say = (intent, c = {}) => Voice.say(myVoice(), intent, c).text;
+// photos: shrink on the phone (also drops location data) before the private upload
+async function shrink(file, max = 1600) {
+  const img = await createImageBitmap(file).catch(() => null); if (!img) return file;
+  const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(r => c.toBlob(b => r(b || file), 'image/jpeg', 0.82));
+}
 const busy = (btn, on) => { if (btn) { btn.disabled = on; btn.dataset.t = btn.dataset.t || btn.textContent; btn.textContent = on ? 'Please wait…' : btn.dataset.t; } };
 const fail = (where, e) => { const el = $(where); if (el) { el.className = 'err'; el.textContent = e.message || String(e); } };
 
@@ -87,10 +99,13 @@ V.home = async () => {
   let bal = null; try { bal = await API.rpc('balance', { member: ctx.me.id }); } catch {}
   let top = []; try { top = await API.rpc('leaderboard', { period: 'week' }); } catch {}
   const pole = top.find(r => r.rank === 1 && r.points > 0);
+  let toScore = 0; if (isParent()) try { toScore = (await API.select('submissions', 'select=id&status=eq.submitted')).length; } catch {}
   frame(`<h1>Hi ${E(ctx.me.display_name)}</h1>
 <p class="muted">${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}${bal !== null ? ` · balance <b>${money(bal)}</b>` : ''}</p>
 ${pole ? `<a class="card notice" href="#/board">🏆 Pole position this week: ${E(pole.emoji)} ${E(pole.display_name)} · ${pole.points} points</a>` : ''}
 ${ctx.avatars[ctx.me.id] ? '' : '<a class="card notice" href="#/avatar">🎨 Make your avatar: it does your chores in the rooms</a>'}
+${toScore ? `<a class="card notice" href="#/review">📸 ${toScore} photo${toScore === 1 ? '' : 's'} to score</a>` : ''}
+<a class="card" href="#/addons">⭐ <b>Add-ons</b> <span class="muted">· study, water, practising… extras beyond chores</span></a>
 <div class="card"><h2>Your chores</h2><p class="muted">${isParent() ? 'Add jobs, tasks and the rubric in Setup → Jobs (coming next). Then each person sees their chores here.' : 'Your chores will show here once a parent adds the jobs.'}</p></div>
 ${isParent() && ctx.members.some(m => m.role === 'child' && !m.username) ? `<a class="card notice" href="#/setup">Set up logins for the children in Setup → People</a>` : ''}`);
 };
@@ -299,6 +314,7 @@ ${who ? `<p>🏠 ${E(who.display_name)} has the whole room this week.</p>` : ''}
 V.room = async id => {
   const [rooms, jobs, claims, acts] = await Promise.all([API.select('rooms', `select=*&id=eq.${id}`), API.select('jobs', `select=*&room_id=eq.${id}&active=is.true&order=position`),
     API.select('room_claims', `select=*&room_id=eq.${id}&week_start=eq.${weekStart()}`), API.select('activity', `select=*&room_id=eq.${id}`)]);
+  const subs = await API.select('submissions', `select=id,job_id,status&member_id=eq.${ctx.me.id}&occ=eq.${today()}`).catch(() => []);
   const r = rooms[0]; if (!r) { frame('<p>Room not found.</p>'); return; }
   const pays = Object.fromEntries(await Promise.all(jobs.map(async j => [j.id, await API.rpc('effective_pay', { job: j.id }).catch(() => j.pay_cents)])));
   const claim = claims.find(c => c.status === 'active'), mine = acts.find(a => a.member_id === ctx.me.id);
@@ -307,25 +323,105 @@ V.room = async id => {
   const RANK = { little: 0, kid: 1, teen: 2, adult: 3 }, canDo = j => RANK[ctx.me.age_group] >= RANK[j.min_age] && (ctx.me.role === 'child' || j.parents_in || j.is_project);
   const bonus = Math.round(r.whole_bonus_cents * (ctx.settings?.bonus_percent ?? 100) / 100), pen = Math.round(r.whole_penalty_cents * (ctx.settings?.penalty_percent ?? 100) / 100);
   frame(`<p class="muted"><a href="#/rooms">Rooms</a> › ${E(r.name)}</p><h1>${E(r.emoji)} ${E(r.name)}</h1>
-<div class="roomart" style="background-image:url(rooms/${ROOM_ART(r.name)}.webp)" role="img" aria-label="${E(r.name)}">${acts.map((a, i) => avatarOf(a.member_id) ? `<span class="here" style="left:${28 + i * 20}%" data-av="${a.member_id}"></span>` : '').join('')}</div>
-${ROOM_ART(r.name) === 'kitchen' ? '<p><a href="scene.html">Watch the kitchen scene (preview)</a></p>' : ''}
+${SCENES(r.name) ? `<iframe class="scenebox" src="scene.html?room=${encodeURIComponent(r.id)}" title="${E(r.name)}: the family's avatars at work. Tap one to poke it."></iframe>
+<p class="muted small">Items colour in as chores are scored: full colour and sparkle at 5★.</p>`
+  : `<div class="roomart" style="background-image:url(rooms/${ROOM_ART(r.name)}.webp)" role="img" aria-label="${E(r.name)}">${acts.map((a, i) => avatarOf(a.member_id) ? `<span class="here" style="left:${28 + i * 20}%" data-av="${a.member_id}"></span>` : '').join('')}</div>`}
 ${r.whole_bonus_cents ? `<div class="card">${claim ? `<p>🏠 <b>${E(ctx.members.find(m => m.id === claim.member_id)?.display_name || '')}</b> has the whole room this week: +${money(claim.bonus_cents)} if every chore is done, −${money(claim.penalty_cents)} if not.</p>`
   : `<p><b>Take the whole room</b> this week: every chore below, plus a <b>${money(bonus)}</b> bonus. Miss one and it's ${money(pen)} off.</p>${ctx.me.role !== 'caregiver' ? '<button class="btn" id="claim">Claim the whole room</button>' : ''}`}<p id="cmsg" role="status"></p></div>` : ''}
 <h2>Chores</h2><ul class="list">${jobs.map(j => `<li class="row"><span class="emo" aria-hidden="true">${E(j.emoji)}</span><span class="grow"><b>${E(j.name)}</b><br>
-<span class="muted">${money(pays[j.id])} · ${often(j)}${j.is_project ? ' · project' : ''}${j.kind === 'personal' ? ' · private photo' : ''}</span></span>
-<span class="acts">${mine && mine.job_id === j.id ? '<span class="tag ok">Doing it</span>' : canDo(j) && ctx.me.role !== 'caregiver' ? `<button class="mini" data-do="${j.id}">I'll do it</button>` : ''}</span></li>`).join('') || '<li class="muted">No chores in this room yet.</li>'}</ul>
+<span class="muted">${money(pays[j.id])} · ${often(j)}${j.is_project ? ' · project' : ''}${j.kind === 'personal' ? ' · private photo' : ''}${mine && mine.job_id === j.id ? ' · <b>doing it now</b>' : ''}</span></span>
+<span class="acts">${(() => { const sub = subs.find(x => x.job_id === j.id);
+  if (sub && sub.status === 'submitted') return '<span class="tag">Photo in · waiting for a score</span>';
+  if (sub && sub.status === 'approved') return '<span class="tag ok">Scored today</span>';
+  if (mine && mine.job_id === j.id) return `<button class="mini" data-photo="${j.id}">Done? Add photo</button>`;
+  return canDo(j) && ctx.me.role !== 'caregiver' ? `<button class="mini" data-do="${j.id}">${mine ? 'Switch to this' : "I'll do it"}</button>` : ''; })()}</span></li>`).join('') || '<li class="muted">No chores in this room yet.</li>'}</ul>
 <div id="timerbox"></div>`);
   document.querySelectorAll('[data-av]').forEach(sp => { const av = avatarOf(sp.dataset.av); const sv = Avatar.svg(av, av.name); sv.style.height = '100%'; sp.appendChild(sv); });
   const cb = $('#claim'); if (cb) cb.onclick = async () => { try { await API.rpc('claim_room', { room: r.id, week: weekStart() }); $('#cmsg').className = 'ok';
-    $('#cmsg').textContent = Voice.say({ personality: me.personality, outfit: me.outfit }, 'start', { chore: 'the whole ' + r.name.toLowerCase() }).text; setTimeout(() => V.room(id), 1600); } catch (err) { fail('#cmsg', err); } };
+    $('#cmsg').textContent = Voice.say({ personality: me.personality, outfit: me.outfit }, 'start', { chore: 'the whole ' + r.name.toLowerCase() }).text; later(() => V.room(id), 1600); } catch (err) { fail('#cmsg', err); } };
   document.querySelectorAll('[data-do]').forEach(b => b.onclick = () => { const j = jobs.find(x => x.id === b.dataset.do);
     $('#timerbox').innerHTML = `<div class="card form"><h3 style="margin:0">${E(j.name)}</h3><label>How long do you want? <select id="mins">${[5, 10, 15, 20, 30, 45, 60].map(m => `<option ${m === 15 ? 'selected' : ''}>${m}</option>`).join('')}</select></label>
-<button class="btn" id="go">Start the timer</button><p id="tmsg" role="status"></p></div>`; $('#timerbox').scrollIntoView({ behavior: 'smooth' });
+${mine ? '<p class="muted small">You can only have one chore going at a time, so this replaces the one you started.</p>' : ''}<button class="btn" id="go">Start it</button><p id="tmsg" role="status"></p></div>`; $('#timerbox').scrollIntoView({ behavior: 'smooth' });
     $('#go').onclick = async () => { try {
-      await API.call('/rest/v1/activity?on_conflict=member_id', { method: 'POST', body: { member_id: ctx.me.id, family_id: ctx.family.id, room_id: r.id, job_id: j.id }, headers: { Prefer: 'resolution=merge-duplicates' } });
-      await API.rpc('start_timer', { job: j.id, minutes: +$('#mins').value }); $('#tmsg').className = 'ok';
-      $('#tmsg').textContent = Voice.say({ personality: me.personality, outfit: me.outfit }, 'start', { chore: j.name.toLowerCase() }).text; setTimeout(() => V.room(id), 1600);
+      await API.rpc('start_task', { job: j.id, minutes: +$('#mins').value }); $('#tmsg').className = 'ok';
+      $('#tmsg').textContent = Voice.say({ personality: me.personality, outfit: me.outfit }, 'start', { chore: j.name.toLowerCase() }).text; later(() => V.room(id), 1600);
     } catch (err) { fail('#tmsg', err); } }; });
+  document.querySelectorAll('[data-photo]').forEach(b => b.onclick = () => { const j = jobs.find(x => x.id === b.dataset.photo); let blob = null;
+    $('#timerbox').innerHTML = `<div class="card form"><h3 style="margin:0">📸 ${E(j.name)}</h3>
+<p class="muted">${j.kind === 'personal' ? 'This photo is private: only you and your parents can see it.' : 'Take a clear photo of the finished job. Keep people out of it: just the chore.'} It counts once a parent scores it.</p>
+<label>Photo <input type="file" id="ph" accept="image/*" capture="environment"></label><img id="phprev" alt="Your photo" hidden style="max-width:100%;border-radius:12px">
+<button class="btn" id="send" disabled>Send the photo</button><p id="pmsg" role="status"></p></div>`; $('#timerbox').scrollIntoView({ behavior: 'smooth' });
+    $('#ph').onchange = async e => { const f = e.target.files[0]; if (!f) return; blob = await shrink(f); const im = $('#phprev'); im.src = URL.createObjectURL(blob); im.hidden = false; $('#send').disabled = false; };
+    $('#send').onclick = async () => { const btn = $('#send'); busy(btn, true); try {
+      const sid = crypto.randomUUID(), path = `${ctx.family.id}/${ctx.me.id}/${sid}/after.jpg`;
+      await API.upload(path, blob);
+      const tasks = await API.select('tasks', `select=id&job_id=eq.${j.id}`);
+      await API.insert('submissions', { id: sid, family_id: ctx.family.id, job_id: j.id, member_id: ctx.me.id, occ: today(), after_path: path, tasks_done: tasks.map(t => t.id) });
+      $('#pmsg').className = 'ok'; $('#pmsg').textContent = say('progress', { chore: j.name.toLowerCase() }) + ' Your photo is in.'; later(() => V.room(id), 1800);
+    } catch (err) { busy(btn, false); fail('#pmsg', /duplicate|unique/i.test(err.message) ? new Error('A photo for this chore is already in today.') : err); } }; });
+};
+
+// ---------- parents: score photos ----------
+V.review = async () => {
+  if (!isParent()) { frame('<p>Only parents score photos.</p>'); return; }
+  const [subs, jobs, tasks] = await Promise.all([API.select('submissions', 'select=*&status=eq.submitted&order=created_at'), API.select('jobs', 'select=id,name,emoji,kind'), API.select('tasks', 'select=*&order=position')]);
+  const name = id => ctx.members.find(m => m.id === id)?.display_name || '';
+  frame(`<h1>Score photos</h1><p class="muted">${subs.length ? `${subs.length} waiting. Score each part 1–5; the room colours in to match.` : 'Nothing waiting. Photos show up here when someone finishes a chore.'}</p>
+${subs.map(s => { const j = jobs.find(x => x.id === s.job_id) || {}; const ts = tasks.filter(t => t.job_id === s.job_id);
+  return `<div class="card form" data-sub="${s.id}"><h2 style="margin:0">${E(j.emoji || '')} ${E(j.name || 'Chore')}</h2><p class="muted">${E(name(s.member_id))} · ${E(s.occ)}${j.kind === 'personal' ? ' · private photo' : ''}</p>
+<img class="proof" alt="Photo of ${E(j.name || 'the chore')}" data-path="${E(s.after_path || '')}" style="max-width:100%;border-radius:12px;background:#eee;min-height:120px">
+${ts.map(t => `<label>${E(t.name)}${t.standard_5 ? `<span class="muted small"> · a 5 looks like: ${E(t.standard_5)}</span>` : ''}<select data-score="${t.id}">${[5, 4, 3, 2, 1].map(n => `<option value="${n}">${'★'.repeat(n)} ${n}</option>`).join('')}</select></label>`).join('') || '<p class="muted">This chore has no checklist yet.</p>'}
+<label>A note for ${E(name(s.member_id))} (optional) <input maxlength="600" data-fb></label>
+<div class="row"><button class="btn" data-ok="${s.id}" ${ts.length ? '' : 'disabled'}>Approve the score</button><button class="btn alt" data-again="${s.id}">Ask for a new photo</button></div><p role="status" data-msg="${s.id}"></p></div>`; }).join('')}`);
+  document.querySelectorAll('img.proof').forEach(async im => { if (im.dataset.path) try { im.src = await API.photoUrl(im.dataset.path); } catch { im.alt = 'Photo could not load'; } });
+  document.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => { const card = b.closest('[data-sub]'), m = card.querySelector('[data-msg]'); busy(b, true);
+    const sc = Object.fromEntries([...card.querySelectorAll('[data-score]')].map(x => [x.dataset.score, +x.value]));
+    try { const pay = await API.rpc('approve_scores', { sub: b.dataset.ok, task_scores: sc, feedback: card.querySelector('[data-fb]').value.trim() || null });
+      m.className = 'ok'; m.textContent = `Scored. ${money(pay)} earned.`; later(() => V.review(), 1400); } catch (err) { busy(b, false); m.className = 'err'; m.textContent = err.message; } });
+  document.querySelectorAll('[data-again]').forEach(b => b.onclick = async () => { const m = document.querySelector(`[data-msg="${b.dataset.again}"]`);
+    try { await API.remove('submissions', `id=eq.${b.dataset.again}`); m.className = 'ok'; m.textContent = 'Sent back. The chore stays open until a new photo comes in.'; later(() => V.review(), 1400); }
+    catch (err) { m.className = 'err'; m.textContent = err.message; } });
+};
+
+// ---------- add-ons: extras beyond chores ----------
+V.addons = async () => {
+  const [adds, logs] = await Promise.all([API.select('addons', 'select=*&active=is.true&order=created_at'), API.select('addon_logs', 'select=*&order=created_at.desc&limit=80')]);
+  const name = id => ctx.members.find(m => m.id === id)?.display_name || '';
+  const forMe = adds.filter(a => !a.member_id || a.member_id === ctx.me.id);
+  const todayN = a => logs.filter(l => l.addon_id === a.id && l.member_id === ctx.me.id && l.done_on === today()).length;
+  const how = a => a.value_cents ? `${money(a.value_cents)} · ${a.unlock === 'now' ? 'paid straight away' : a.unlock === 'scheduled' ? 'unlocks ' + new Date(a.unlock_at).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }) + ' once your chores are done' : 'unlocks once your chores are done'}` : 'just for you';
+  const held = logs.filter(l => l.member_id === ctx.me.id && l.status === 'held');
+  frame(`<h1>Add-ons</h1><p class="muted">Things you do beyond chores. Your own ones are just for you (your parents see them and can reward them). Bonuses set by a parent unlock once your chores are done.</p>
+${held.length ? `<div class="card notice">🔒 ${held.length} bonus${held.length === 1 ? '' : 'es'} waiting: finish your chores to unlock ${held.length === 1 ? 'it' : 'them'}.</div>` : ''}
+${ctx.me.role === 'caregiver' ? '' : `<ul class="list">${forMe.map(a => `<li class="row"><span class="emo" aria-hidden="true">${E(a.emoji)}</span><span class="grow"><b>${E(a.name)}</b><br><span class="muted">${how(a)} · ${todayN(a)}/${a.per_day} today</span></span>
+<span class="acts">${todayN(a) < a.per_day ? `<button class="mini" data-log="${a.id}">Did it</button>` : '<span class="tag ok">Done today</span>'}${a.source === 'self' ? ` <button class="mini alt" data-retire="${a.id}" aria-label="Remove ${E(a.name)}">Remove</button>` : ''}</span></li>`).join('') || '<li class="muted">No add-ons yet. Add one below.</li>'}</ul>
+<p id="lmsg" role="status"></p>
+<form class="card form" id="own"><h2 style="margin:0">Add your own</h2><label>What is it? <input id="oname" maxlength="60" placeholder="Study 30 minutes, drink water, practise driving…" required></label><button class="btn">Add it</button><p id="omsg" role="status"></p></form>`}
+${isParent() ? `<form class="card form" id="fam"><h2 style="margin:0">Add one with a bonus</h2>
+<label>Name <input id="fname" maxlength="60" placeholder="Eat dinner together" required></label>
+<label>Bonus <input id="fval" type="number" min="0.05" max="100" step="0.05" value="0.50" required></label>
+<label>For <select id="fwho"><option value="">Everyone</option>${ctx.members.filter(m => m.role !== 'caregiver' && m.active).map(m => `<option value="${m.id}">${E(m.display_name)}</option>`).join('')}</select></label>
+<label>Unlocks <select id="funl"><option value="chores">Once their chores are done</option><option value="scheduled">At a set time (and chores done)</option><option value="now">Straight away</option></select></label>
+<label id="fwhen" style="display:none">When <input id="fat" type="datetime-local"></label>
+<button class="btn">Add it</button><p id="fmsg" role="status"></p></form>
+<div class="card"><h2 style="margin-top:0">Family log</h2><ul class="list">${logs.slice(0, 40).map(l => { const a = adds.find(x => x.id === l.addon_id) || { name: 'Add-on', emoji: '⭐' };
+  return `<li class="row"><span class="emo" aria-hidden="true">${E(a.emoji)}</span><span class="grow"><b>${E(name(l.member_id))}</b> · ${E(a.name)}<br><span class="muted">${E(l.done_on)}${l.note ? ' · ' + E(l.note) : ''} · ${l.status === 'held' ? '🔒 waiting for chores' : l.status === 'released' ? '✅ ' + money(l.reward_cents) : 'logged'}</span></span>
+<span class="acts">${l.status === 'logged' ? `<input type="number" min="0.05" max="100" step="0.05" value="1.00" aria-label="Reward amount" data-amt="${l.id}" style="width:5.5em"> <button class="mini" data-reward="${l.id}">Reward</button>` : ''}${l.status === 'held' ? `<button class="mini alt" data-push="${l.addon_id}">Unlock now</button>` : ''}</span></li>`; }).join('') || '<li class="muted">Nothing logged yet.</li>'}</ul><p id="rmsg" role="status"></p></div>` : ''}`);
+  const msg = (sel, ok, text) => { const e = $(sel); e.className = ok ? 'ok' : 'err'; e.textContent = text; };
+  document.querySelectorAll('[data-log]').forEach(b => b.onclick = async () => { const a = adds.find(x => x.id === b.dataset.log); busy(b, true);
+    try { const r = await API.rpc('log_addon', { addon: a.id }); const c = { chore: a.name.toLowerCase() };
+      msg('#lmsg', true, r === 'held' ? say('held', c) : r === 'released' ? say('unlocked', c) + ` (+${money(a.value_cents)})` : say('addon', c)); later(() => V.addons(), 1800);
+    } catch (err) { busy(b, false); msg('#lmsg', false, err.message); } });
+  document.querySelectorAll('[data-retire]').forEach(b => b.onclick = async () => { try { await API.rpc('retire_addon', { addon: b.dataset.retire }); V.addons(); } catch (err) { msg('#lmsg', false, err.message); } });
+  const own = $('#own'); if (own) own.onsubmit = async e => { e.preventDefault(); try { await API.rpc('add_my_addon', { name: $('#oname').value.trim() }); V.addons(); } catch (err) { msg('#omsg', false, err.message); } };
+  const fam = $('#fam'); if (fam) { $('#funl').onchange = () => { $('#fwhen').style.display = $('#funl').value === 'scheduled' ? '' : 'none'; };
+    fam.onsubmit = async e => { e.preventDefault(); const unl = $('#funl').value;
+      if (unl === 'scheduled' && !$('#fat').value) { msg('#fmsg', false, 'Pick when it unlocks.'); return; }
+      try { await API.rpc('add_family_addon', { name: $('#fname').value.trim(), value_cents: Math.round(+$('#fval').value * 100), member: $('#fwho').value || null, unlock: unl,
+          unlock_at: unl === 'scheduled' ? new Date($('#fat').value).toISOString() : null, min_chores: 1 }); V.addons(); } catch (err) { msg('#fmsg', false, err.message); } }; }
+  document.querySelectorAll('[data-reward]').forEach(b => b.onclick = async () => { const amt = Math.round(+document.querySelector(`[data-amt="${b.dataset.reward}"]`).value * 100);
+    try { await API.rpc('reward_addon', { log: b.dataset.reward, cents: amt }); V.addons(); } catch (err) { msg('#rmsg', false, err.message); } });
+  document.querySelectorAll('[data-push]').forEach(b => b.onclick = async () => { try { const n = await API.rpc('push_addon', { addon: b.dataset.push }); msg('#rmsg', true, `${n} bonus${n === 1 ? '' : 'es'} unlocked.`); later(() => V.addons(), 1400); } catch (err) { msg('#rmsg', false, err.message); } });
 };
 
 V.about = async () => {
@@ -361,7 +457,7 @@ async function start() {
 PWA.init({
   key: 'family-chores-web-v1', defaults: {},
   home: guard(V.home),
-  routes: { board: guard(V.board), family: guard(V.family), money: guard(V.money), setup: guard(V.setup), about: guard(V.about), avatar: guard(V.avatar), rooms: guard(V.rooms), room: guard(V.room),
+  routes: { board: guard(V.board), family: guard(V.family), money: guard(V.money), setup: guard(V.setup), about: guard(V.about), avatar: guard(V.avatar), rooms: guard(V.rooms), room: guard(V.room), review: guard(V.review), addons: guard(V.addons),
     signin: tab => (API.userId() ? PWA.go('#/') : signIn(tab || 'kid')) }
 });
 start();

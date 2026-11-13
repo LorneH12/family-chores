@@ -66,6 +66,8 @@
   .wtag{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);white-space:nowrap;background:#fff;border-radius:99px;padding:5px 12px;font-weight:800;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,.12)}
   .wcard.front .wtag{background:var(--t);color:#fff}
   .wbtns{display:flex;gap:8px;justify-content:center;margin:8px 0}
+  .scenebox{display:block;width:100%;max-width:520px;aspect-ratio:1/1.22;border:0;margin:0 auto}
+  .small{font-size:12.5px}
   .roomart{position:relative;width:100%;max-width:420px;aspect-ratio:1/1;margin:0 auto;background-repeat:no-repeat;background-size:1200% 100%;background-position:45.45% 0}
   .roomart .here{position:absolute;bottom:22%;width:22%;height:34%}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -73,9 +75,9 @@
 </head>
 <body>
 <a class="skip" href="#app">Skip to content</a>
-<header><b>Family Chores</b><nav class="hlinks" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/rooms" data-t="rooms">Rooms</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav><button id="install" hidden>Install app</button></header>
+<header><b>Family Chores</b><nav class="hlinks" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/rooms" data-t="rooms">Rooms</a><a href="#/addons" data-t="addons">Add-ons</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav><button id="install" hidden>Install app</button></header>
 <div class="wrap"><aside id="side" aria-label="Menu"></aside><main id="app" tabindex="-1"></main></div>
-<nav class="tabs" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/rooms" data-t="rooms">Rooms</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav>
+<nav class="tabs" aria-label="Sections"><a href="#/" data-t="home">Today</a><a href="#/board" data-t="board">Scoreboard</a><a href="#/rooms" data-t="rooms">Rooms</a><a href="#/addons" data-t="addons">Add-ons</a><a href="#/money" data-t="money">Money</a><a href="#/setup" data-t="setup">Setup</a></nav>
 <script src="config.js"></script>
 <script src="api.js"></script>
 <script src="core.js"></script>

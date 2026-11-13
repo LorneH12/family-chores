@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'none'">
 <meta name="theme-color" content="#2f6f4f">
 <title>Room scenes (prototype)</title>
 <style>
@@ -32,6 +32,8 @@
   .pick svg{width:100%;height:80px}
   .note{font-size:12.5px;color:#4a3b2c;margin-top:28px}
   input[type=range]{width:160px}
+  body.live{background:transparent} body.live main{padding:0} body.live .tabs,body.live #people,body.live details,body.live .note,body.live p.sm,body.live .tools label,body.live #reset,body.live #push{display:none}
+  body.live h1{display:none;font-size:15px;font-weight:600;color:#4a3b2c} body.live .tools{margin-top:6px}
   :focus-visible{outline:3px solid #2f6f4f;outline-offset:2px}
 </style>
 </head>
@@ -53,8 +55,11 @@
   <p class="note">Prototype: the photo-and-score buttons stand in for uploading a photo and a parent's score. In the app, avatars follow what each person picks, and reminders arrive as notifications.</p>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="config.js"></script>
+<script src="api.js"></script>
 <script src="avatar.js"></script>
 <script src="voice.js"></script>
 <script src="scene.js"></script>
+<script src="scene-live.js"></script>
 </body>
 </html>

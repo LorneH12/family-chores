@@ -16,14 +16,34 @@ const db = {
     ['j4', 'r2', 'Vacuum', '🌀', 500, 'weekly', 'kid'], ['j5', 'r4', 'Mow the lawn', '🌱', 1500, 'weekly', 'teen']]
     .map(([id, room_id, name, emoji, pay_cents, freq, min_age], i) => ({ id, family_id: FAM, room_id, name, emoji, pay_cents, freq, every_n: 3, min_age, parents_in: id === 'j1' || id === 'j2', is_project: false, kind: 'work', active: true, position: i })),
   avatars: [], room_claims: [], activity: [], scores: [], penalties: [], payouts: [],
+  tasks: [{ id: 't1', job_id: 'j1', family_id: FAM, name: 'Dishes washed and racked', standard_5: 'Every dish clean', weight: 1, position: 0 },
+          { id: 't2', job_id: 'j1', family_id: FAM, name: 'Sink and drain cleared', standard_5: 'Sink empty and wiped', weight: 1, position: 1 }],
+  submissions: [], item_state: [], addons: [], addon_logs: [],
+};
+const now = () => new Date().toISOString();
+const rpcs = {
+  start_task: a => { const j = db.jobs.find(x => x.id === a.job); db.activity = db.activity.filter(r => r.member_id !== ME.id);
+    db.activity.push({ member_id: ME.id, family_id: FAM, room_id: j.room_id, job_id: j.id, started_at: now(), planned_end: new Date(Date.now() + a.minutes * 60000).toISOString() }); return null; },
+  approve_scores: a => { const sub = db.submissions.find(x => x.id === a.sub); const v = Object.values(a.task_scores); const lvl = Math.round(v.reduce((m, n) => m + n, 0) / v.length);
+    sub.status = 'approved'; db.item_state = db.item_state.filter(r => r.job_id !== sub.job_id); db.item_state.push({ job_id: sub.job_id, family_id: FAM, level: lvl, member_id: sub.member_id, updated_at: now() });
+    db.activity = db.activity.filter(r => !(r.member_id === sub.member_id && r.job_id === sub.job_id)); return 150; },
+  add_my_addon: a => { const id = 'a' + (db.addons.length + 1); db.addons.push({ id, family_id: FAM, member_id: ME.id, name: a.name, emoji: '⭐', source: 'self', value_cents: 0, per_day: 1, unlock: 'now', active: true }); return id; },
+  add_family_addon: a => { const id = 'a' + (db.addons.length + 1); db.addons.push({ id, family_id: FAM, member_id: a.member, name: a.name, emoji: '⭐', source: 'parent', value_cents: a.value_cents, per_day: 1, unlock: a.unlock, unlock_at: a.unlock_at, active: true }); return id; },
+  log_addon: a => { const ad = db.addons.find(x => x.id === a.addon); const st = ad.value_cents ? (db.activity.some(r => r.member_id === ME.id) ? 'held' : 'released') : 'logged';
+    db.addon_logs.unshift({ id: 'l' + (db.addon_logs.length + 1), addon_id: ad.id, family_id: FAM, member_id: ME.id, done_on: new Date().toLocaleDateString('en-CA'), status: st, reward_cents: st === 'released' ? ad.value_cents : 0 }); return st; },
+  reward_addon: a => { const l = db.addon_logs.find(x => x.id === a.log); l.status = 'released'; l.reward_cents = a.cents; return null; },
+  push_addon: a => { let n = 0; db.addon_logs.filter(l => l.addon_id === a.addon && l.status === 'held').forEach(l => { l.status = 'released'; n++; }); return n; },
 };
 const calls = [];
 const filt = (rows, q) => { for (const [k, v] of q) { const m = /^eq\.(.*)$/.exec(v); if (m && k !== 'select') rows = rows.filter(r => String(r[k]) === m[1]); if (v === 'is.true') rows = rows.filter(r => r[k] === true); } return rows; };
 function handle(method, url, body) {
   const u = new URL(url), path = u.pathname, q = [...u.searchParams];
   calls.push(method + ' ' + path.replace('/rest/v1', '') + (body ? ' ' + body.slice(0, 600) : ''));
+  if (path.startsWith('/storage/v1/object/sign/')) return { signedURL: '/object/sign/proofs/x.jpg?token=t' };
+  if (path.startsWith('/storage/v1/object/')) return { Key: path.slice(19) };
   if (path.startsWith('/rest/v1/rpc/')) {
     const fn = path.split('/').pop(), a = body ? JSON.parse(body) : {};
+    if (rpcs[fn]) return rpcs[fn](a);
     return { balance: 1234, leaderboard: [], my_status: [], effective_pay: Math.round((db.jobs.find(j => j.id === a.job)?.pay_cents || 0) * 0.5 / 5) * 5,
       claim_room: (db.room_claims.push({ id: 'c1', room_id: a.room, week_start: a.week, member_id: ME.id, status: 'active', bonus_cents: 1500, penalty_cents: 2250 }), 'c1'),
       start_timer: 't1', load_starter_chores: '11 rooms and 37 chores loaded', create_invite: 'ABCDE12345', decide_member: null }[fn] ?? null;
@@ -31,8 +51,9 @@ function handle(method, url, body) {
   const t = path.replace('/rest/v1/', '');
   if (!db[t]) return [];
   if (method === 'GET') return filt(db[t], q);
-  if (method === 'POST') { const row = JSON.parse(body); const key = t === 'avatars' || t === 'activity' ? 'member_id' : 'id'; db[t] = db[t].filter(r => r[key] !== row[key]); db[t].push(row); return [row]; }
+  if (method === 'POST') { const row = JSON.parse(body); if (t === 'submissions') row.status = row.status || 'submitted'; const key = t === 'avatars' || t === 'activity' ? 'member_id' : 'id'; db[t] = db[t].filter(r => r[key] !== row[key]); db[t].push(row); return [row]; }
   if (method === 'PATCH') { const rows = filt(db[t], q); rows.forEach(r => Object.assign(r, JSON.parse(body))); return rows; }
+  if (method === 'DELETE') { const rows = filt(db[t], q); db[t] = db[t].filter(r => !rows.includes(r)); return null; }
   return [];
 }
 
@@ -95,9 +116,53 @@ await sleep(1200);
 ok(await ev(`document.body.innerText.includes('has the whole room this week')`), 'room shows the claim');
 await ev(`document.querySelector('[data-do]').click()`); await sleep(400);
 await ev(`document.querySelector('#go').click()`); await sleep(900);
-ok(calls.some(c => c.startsWith('POST /activity')) && calls.some(c => c.startsWith('POST /rpc/start_timer')), 'starting a chore sets your activity and a timer');
+ok(calls.some(c => c.startsWith('POST /rpc/start_task') && c.includes('"job":"j1"')), 'starting a chore calls start_task (one task at a time, with a planned finish)');
 await sleep(1500);
+const sc = `document.querySelector('iframe.scenebox').contentWindow.SceneState`;
+for (let i = 0; i < 20 && !(await ev(`(() => { try { return ${sc}.agents.length > 0; } catch { return false; } })()`)); i++) await sleep(300);
+ok(await ev(`!!document.querySelector('iframe.scenebox')`), 'the kitchen shows the live scene');
+ok(await ev(`${sc}.agents.length === 1 && ${sc}.agents[0].cur === 'live:j1'`), "your avatar is in the scene, on your one real task (wash the dishes)");
+ok(await ev(`Math.abs(${sc}.agents[0].plannedEnd - (Date.now() + 15 * 60e3)) < 120e3`), 'its planned finish comes from the database');
+ok(await ev(`document.querySelector('iframe.scenebox').contentDocument.getElementById('cpct').textContent === '0%'`), 'kitchen starts as uncoloured line art');
 await shot('4-room', 1100);
+// photo → submission
+await ev(`document.querySelector('[data-photo]').click()`); await sleep(400);
+await ev(`(async () => { const c = document.createElement('canvas'); c.width = 64; c.height = 48; c.getContext('2d').fillRect(0, 0, 64, 48);
+  const b = await new Promise(r => c.toBlob(r, 'image/png')); const dt = new DataTransfer(); dt.items.add(new File([b], 'sink.png', { type: 'image/png' }));
+  const i = document.querySelector('#ph'); i.files = dt.files; i.dispatchEvent(new Event('change')); })()`); await sleep(800);
+ok(await ev(`!document.querySelector('#send').disabled && !document.querySelector('#phprev').hidden`), 'photo picked and previewed');
+await ev(`document.querySelector('#send').click()`); await sleep(1200);
+ok(calls.some(c => /^POST \/storage\/v1\/object\/proofs\/f0000000-0000-0000-0000-000000000001\/m1\/[0-9a-f-]+\/after\.jpg/.test(c)), 'photo uploaded privately to family/member/submission/after.jpg');
+ok(calls.some(c => c.startsWith('POST /submissions') && c.includes('"after_path"') && c.includes('"tasks_done":["t1","t2"]')), 'submission created with the photo and its checklist');
+await sleep(1500);
+ok(await ev(`document.body.innerText.includes('waiting for a score')`), 'the chore now shows: photo in, waiting for a score');
+ok(await ev(`${sc}.agents[0].cur === 'live:j1'`), 'the avatar keeps working until a parent scores it (not done yet)');
+// parent scores it
+await go('#/', 1500);
+ok(await ev(`!!document.querySelector('a[href="#/review"]') && document.body.innerText.includes('1 photo to score')`), 'parents see "1 photo to score" on the home screen');
+await go('#/review', 1500);
+ok(await ev(`document.querySelectorAll('[data-score]').length === 2 && !!document.querySelector('img.proof')`), 'score screen shows the photo and the 2 checklist items');
+await ev(`document.querySelector('[data-score="t2"]').value = '4'`);
+await shot('6-review', 1300);
+await ev(`document.querySelector('[data-ok]').click()`); await sleep(900);
+ok(calls.some(c => c.startsWith('POST /rpc/approve_scores') && c.includes('"t1":5') && c.includes('"t2":4')), 'approve sends each task score');
+await go('#/room/r1', 2000);
+for (let i = 0; i < 20 && !(await ev(`(() => { try { return ${sc}.level['kitchen:sink'] === 5; } catch { return false; } })()`)); i++) await sleep(300);
+ok(await ev(`${sc}.level['kitchen:sink'] === 5`), 'score approved → the sink is in full colour in the live scene');
+ok(await ev(`document.body.innerText.includes('Scored today')`) && await ev(`${sc}.agents[0].cur === null`), 'chore shows Scored; your avatar is free for the next one');
+await shot('7-coloured', 1100);
+// add-ons
+await go('#/addons', 1500);
+ok(await ev(`document.querySelectorAll('.tabs a').length === 6 && document.documentElement.scrollWidth <= innerWidth`), 'Add-ons tab added; nothing scrolls sideways');
+await ev(`{ document.querySelector('#fname').value = 'Drink 6 glasses of water'; document.querySelector('#fval').value = '0.50'; document.querySelector('#fam').requestSubmit(); }`); await sleep(1000);
+ok(calls.some(c => c.startsWith('POST /rpc/add_family_addon') && c.includes('"value_cents":50') && c.includes('"unlock":"chores"') && c.includes('"member":null')), 'parent adds a $0.50 add-on for everyone, unlocked once chores are done');
+await ev(`{ document.querySelector('#oname').value = 'Study 30 minutes'; document.querySelector('#own').requestSubmit(); }`); await sleep(1000);
+ok(calls.some(c => c.startsWith('POST /rpc/add_my_addon') && c.includes('Study 30 minutes')), 'anyone can add their own add-on');
+await ev(`document.querySelectorAll('[data-log]')[1].click()`); await sleep(2500);
+ok(calls.some(c => c.startsWith('POST /rpc/log_addon')) && await ev(`!!document.querySelector('[data-reward]')`), 'own add-on logged; parents can reward it from the family log');
+await ev(`document.querySelector('[data-reward]').click()`); await sleep(1000);
+ok(calls.some(c => c.startsWith('POST /rpc/reward_addon') && c.includes('"cents":100')), 'parent rewards it ($1)');
+await shot('8-addons', 1500);
 
 await go('#/setup', 2000);
 await ev(`document.querySelector('#invites').open = true`); await sleep(300);
